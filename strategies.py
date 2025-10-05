@@ -14,9 +14,7 @@ class Strategy(ABC):
 
 class MovingAverageCrossoverStrategy(Strategy):
     "Analyses short-term and long-term moving averages to generate buy/sell signals."
-    #def init
-    # calculate moving averages
-    # compare moving averages to generate signals
+    
 
 class MomentumStrategy(Strategy):
     pass
