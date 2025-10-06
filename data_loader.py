@@ -25,17 +25,18 @@ def load_market_data(file_path: Path):
         required_format = {"timestamp", "symbol", "price"}
         if set(reader.fieldnames) != required_format:
             raise ValueError(f"CSV must have columns: {required_format}")
-        market_data_list: List[MarketDataPoint] = []
-        for row in reader:
-            try:
-                mdp = MarketDataPoint(
-                    timestamp = _parse_timestamp(row["timestamp"]),
-                    symbol = row["symbol"],
-                    price = float(row["price"])
-                )
-            except ValueError as e:
-                raise ValueError(f"Error parsing line {reader.line_num}: {e}") from e
-            market_data_list.append(mdp)
-        return market_data_list  
+        return load_from_reader(reader)
 
-    
+def load_from_reader(reader: csv.DictReader):
+    market_data_list: List[MarketDataPoint] = []
+    for row in reader:
+        try:
+            mdp = MarketDataPoint(
+                timestamp = _parse_timestamp(row["timestamp"]),
+                symbol = row["symbol"],
+                price = float(row["price"])
+            )
+        except ValueError as e:
+            raise ValueError(f"Error parsing line {reader.line_num}: {e}") from e
+        market_data_list.append(mdp)
+    return market_data_list
