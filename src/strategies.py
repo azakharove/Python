@@ -1,15 +1,11 @@
+from models import MarketDataPoint
 from abc import ABC, abstractmethod
 
 
-from models import MarketDataPoint
-
-
 class Strategy(ABC):
-    """Base class for trading strategies.
+    "Enforces a common interface for trading strategies by defining methods"
 
-    Enforces a common interface for trading strategies by defining methods
-    that all subclasses must implement.
-    """
+    "that all subclasses must implement."
 
     def __init__(self):
         super().__init__()
@@ -20,11 +16,9 @@ class Strategy(ABC):
 
 
 class MovingAverageCrossoverStrategy(Strategy):
-    """Moving average crossover trading strategy.
+    "Analyses short-term and long-term moving averages to generate buy/sell signals."
 
-    Analyzes short-term and long-term moving averages to generate buy/sell signals.
-    Buy when short MA crosses above long MA, sell when crosses below.
-    """
+    "Buy when short MA crosses above long MA, sell when crosses below."
 
     def __init__(
         self, short_window: int = 20, long_window: int = 50, quantity: int = 100

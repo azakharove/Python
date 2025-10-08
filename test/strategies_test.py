@@ -1,0 +1,62 @@
+from datetime import datetime
+
+
+import strategies
+from models import MarketDataPoint
+
+
+def test_moving_avg_crossover():
+    strategy = strategies.MovingAverageCrossoverStrategy(
+        short_window=3, long_window=5, quantity=10
+    )
+    ticks = [
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=1
+            ),
+            symbol="AAPL",
+            price=100,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=2
+            ),
+            symbol="AAPL",
+            price=101,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=3
+            ),
+            symbol="AAPL",
+            price=102,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=4
+            ),
+            symbol="AAPL",
+            price=106,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=5
+            ),
+            symbol="AAPL",
+            price=108,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=6
+            ),
+            symbol="AAPL",
+            price=110,
+        ),
+    ]
+    signals = []
+    for tick in ticks:
+        signals.extend(strategy.generate_signals(tick))
+
+    assert len(signals) == 2
+    assert signals[0] == ("AAPL", 10, 108, "BUY")
+    assert signals[1] == ("AAPL", 0, 110, "HOLD")
