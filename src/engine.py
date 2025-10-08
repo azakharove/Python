@@ -1,19 +1,16 @@
+import strategies
 from models import MarketDataPoint, Order
 from portfolio import Portfolio
-from strategies import Strategy
 
 
 class ExecutionEngine:
-    """Executes trading strategies by processing market data and managing orders.
-
-    Processing flow:
-    1. Iterate through MarketDataPoint objects in timestamp order
-    2. For each tick, invoke strategies to generate signals
-    3. Instantiate and validate Order objects from signals
-    4. Execute orders by updating the portfolio
-    """
-
-    def __init__(self, strategies: list[Strategy], portfolio: Portfolio):
+    # Iterate through the list of MarketDataPoint objects in timestamp order.
+    # For each tick:
+    #   Invoke each strategy to generate signals.
+    #   Instantiate and validate Order objects.
+    #   Execute orders by updating the portfolio dictionary.
+    # Wrap order creation and execution in try/except blocks for resilience.
+    def __init__(self, strategies: list[strategies.Strategy], portfolio: Portfolio):
         self.strategies = strategies
         self.portfolio = portfolio
 

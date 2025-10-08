@@ -1,12 +1,12 @@
+# list of products and quantities as dict in instructions {'AAPL': {'quantity': 0, 'avg_price': 0.0}}
+# and cash amount
+# to update quantity or cash, high level method that says update quant, product, and method update cash
+# method that applies an executed order to the portfolio that applies functions ^ at once
+# have default parameters cash = 0, dict = {}
 from models import Order
 
 
 class Portfolio:
-    """Portfolio management class for tracking cash and holdings.
-
-    Holdings are stored as {'SYMBOL': {'quantity': int, 'avg_price': float}}
-    """
-
     def __init__(self, cash: float = 0, holdings: dict = {}):
         self.cash = cash
         self.__holdings = holdings  # {'AAPL': {'quantity': 0, 'avg_price': 0.0}}
