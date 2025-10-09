@@ -32,7 +32,32 @@ def main(args):
     engine = ExecutionEngine(strategies, portfolio, failure_rate)
     engine.process_ticks(ticks)
 
-    print(f"Final portfolio cash: {portfolio.cash}")
+    # Get final prices for each symbol
+    final_prices = {}
+    for tick in reversed(ticks):
+        if tick.symbol not in final_prices:
+            final_prices[tick.symbol] = tick.price
+    
+    # Calculate total portfolio value
+    holdings = portfolio.get_all_holdings()
+    total_value = portfolio.get_total_value(final_prices)
+    holdings_value = total_value - portfolio.cash
+    
+    print(f"\n{'='*50}")
+    print(f"FINAL PORTFOLIO SUMMARY")
+    print(f"{'='*50}")
+    print(f"Initial capital:     ${cash:,.2f}")
+    print(f"Final cash:          ${portfolio.cash:,.2f}")
+    print(f"Holdings value:      ${holdings_value:,.2f}")
+    print(f"Total portfolio:     ${total_value:,.2f}")
+    print(f"P&L:                 ${total_value - cash:,.2f} ({((total_value - cash) / cash * 100):+.2f}%)")
+    
+    if holdings:
+        print(f"\nCurrent Holdings:")
+        for symbol, holding in holdings.items():
+            current_price = final_prices.get(symbol, 0)
+            position_value = holding["quantity"] * current_price
+            print(f"  {symbol}: {holding['quantity']} shares @ ${current_price:.2f} = ${position_value:,.2f}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
