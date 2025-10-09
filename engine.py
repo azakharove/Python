@@ -31,7 +31,7 @@ class ExecutionEngine:
                     if action != Action.HOLD:
                         order = Order(
                             symbol,
-                            quantity if action == Action.BUY else -quantity,
+                            quantity,
                             price,
                             status=OrderStatus.PENDING,
                         )
@@ -51,9 +51,13 @@ class ExecutionEngine:
             if order.status != OrderStatus.PENDING:
                 raise OrderError(order, "Order must be PENDING to execute")
 
+            # Check if portfolio can execute this order (sufficient cash/holdings)
+            if not self.portfolio.can_execute_order(order):
+                reason = "Insufficient cash" if order.quantity > 0 else "Insufficient holdings"
+                raise OrderError(order, reason)
+
             # Simulate occasional execution failures 
             if random.random() < self.failure_rate:
-                order.status = OrderStatus.FAILED
                 raise ExecutionError(order, "Simulated execution failure")
 
             # Execute order

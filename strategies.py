@@ -78,8 +78,8 @@ class MomentumStrategy(Strategy):
 
         momentum = tick.price - self._prices[-self.lookback]
 
-        if self.holding_period > 0:
-            self.holding_period -= 1
+        if self.hold > 0:
+            self.hold -= 1
             return []
 
         signals = []

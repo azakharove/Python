@@ -8,9 +8,9 @@ class Portfolio:
     Holdings are stored as {'SYMBOL': {'quantity': int, 'avg_price': float}}
     """
 
-    def __init__(self, cash: float = 0, holdings: dict = {}):
+    def __init__(self, cash: float = 0, holdings: dict = None):
         self.cash = cash
-        self.__holdings = holdings
+        self.__holdings = holdings if holdings is not None else {}
 
     def update_cash(self, amount: float):
         self.cash += amount
@@ -50,3 +50,18 @@ class Portfolio:
     def get_holding(self, symbol: str):
         holding = self.__holdings.get(symbol, {"quantity": 0, "avg_price": 0.0})
         return {"quantity": holding["quantity"], "avg_price": holding["avg_price"]}
+
+    def can_execute_order(self, order: Order) -> bool:
+        """Check if an order can be executed given current portfolio state.
+        
+        Returns True if:
+        - For BUY orders: sufficient cash available
+        - For SELL orders: sufficient holdings available
+        """
+        total_cost = order.price * order.quantity
+        
+        if order.quantity > 0:  # BUY order
+            return self.cash >= total_cost
+        else:  # SELL order
+            holding = self.get_holding(order.symbol)
+            return holding["quantity"] >= abs(order.quantity)
