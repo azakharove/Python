@@ -6,3 +6,8 @@
 /PythonHW1.py
 /PythonParticipation9_19.py
 /Python_Session_1.py
+
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.pyc

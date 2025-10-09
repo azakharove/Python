@@ -1,7 +1,8 @@
 import pytest
 
 from portfolio import Portfolio
-from models import Order
+from models import Order, OrderStatus
+from exceptions import OrderError
 
 
 def test_update_cash():
@@ -36,45 +37,45 @@ def test_apply_order():
     portfolio = Portfolio(holdings={}, cash=10000)
     # portfolio = Portfolio(cash = 10000) (ask)
     print(portfolio.get_holding("AAPL"))
-    portfolio.apply_order(Order("AAPL", 10, 150, "COMPLETED"))
+    portfolio.apply_order(Order("AAPL", 10, 150, OrderStatus.COMPLETED))
     assert portfolio.cash == 8500
     assert portfolio.get_holding("AAPL") == {"quantity": 10, "avg_price": 150.0}
 
-    portfolio.apply_order(Order("AAPL", 30, 100, "COMPLETED"))
+    portfolio.apply_order(Order("AAPL", 30, 100, OrderStatus.COMPLETED))
     assert portfolio.cash == 5500
     assert portfolio.get_holding("AAPL") == {"quantity": 40, "avg_price": 112.5}
 
-    portfolio.apply_order(Order("AAPL", -20, 200, "COMPLETED"))
+    portfolio.apply_order(Order("AAPL", -20, 200, OrderStatus.COMPLETED))
     assert portfolio.cash == 9500
     assert portfolio.get_holding("AAPL") == {"quantity": 20, "avg_price": 112.5}
 
     # with self.assertRaises(ValueError):
-    #     pending_order = Order("AAPL", 5, 180, "PENDING")
+    #     pending_order = Order("AAPL", 5, 180, OrderStatus.PENDING)
     #     portfolio.apply_order(pending_order)
 
     # with self.assertRaises(ValueError):
-    #     over_sell_order = Order("AAPL", 20, 180, "COMPLETED")
+    #     over_sell_order = Order("AAPL", 20, 180, OrderStatus.COMPLETED)
     #     portfolio.apply_order(over_sell_order)
 
 
 def test_apply_invalid_order():
     portfolio = Portfolio(cash=10000)
-    with pytest.raises(ValueError):
-        pending_order = Order("AAPL", 5, 180, "PENDING")
+    with pytest.raises(OrderError):
+        pending_order = Order("AAPL", 5, 180, OrderStatus.PENDING)
         portfolio.apply_order(pending_order)
 
 
 def test_sell_quantity_exceeds_holding():
     portfolio = Portfolio(holdings={}, cash=10000)
     
-    portfolio.apply_order(Order("AAPL", 10, 150, "COMPLETED"))
+    portfolio.apply_order(Order("AAPL", 10, 150, OrderStatus.COMPLETED))
     assert portfolio.cash == 8500
     assert portfolio.get_holding("AAPL") == {"quantity": 10, "avg_price": 150.0}
-    with pytest.raises(ValueError):
-        portfolio.apply_order(Order("AAPL", -15, 150, "COMPLETED"))
+    with pytest.raises(OrderError):
+        portfolio.apply_order(Order("AAPL", -15, 150, OrderStatus.COMPLETED))
 
 
 def test_sell_missing_holding():
     portfolio = Portfolio(holdings={}, cash=10000)
-    with pytest.raises(ValueError):
-        portfolio.apply_order(Order("AAPL", -5, 150, "COMPLETED"))
+    with pytest.raises(OrderError):
+        portfolio.apply_order(Order("AAPL", -5, 150, OrderStatus.COMPLETED))

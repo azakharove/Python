@@ -1,4 +1,5 @@
-from models import Order
+from models import Order, OrderStatus
+from exceptions import OrderError
 
 
 class Portfolio:
@@ -9,7 +10,7 @@ class Portfolio:
 
     def __init__(self, cash: float = 0, holdings: dict = {}):
         self.cash = cash
-        self.__holdings = holdings  # {'AAPL': {'quantity': 0, 'avg_price': 0.0}}
+        self.__holdings = holdings
 
     def update_cash(self, amount: float):
         self.cash += amount
@@ -23,7 +24,7 @@ class Portfolio:
         holding = self.__holdings[symbol]
         new_quantity = holding["quantity"] + quantity
         if new_quantity < 0:
-            raise ValueError("Cannot sell more than currently held")
+            raise OrderError(reason="Cannot sell more than currently held")
         elif new_quantity == 0:
             del self.__holdings[symbol]
         else:
@@ -37,8 +38,10 @@ class Portfolio:
             holding["quantity"] = new_quantity
 
     def apply_order(self, order: Order):
-        if order.status != "COMPLETED":
-            raise ValueError("Only completed orders can be applied to the portfolio")
+        if order.status != OrderStatus.COMPLETED:
+            raise OrderError(
+                order, "Only completed orders can be applied to the portfolio"
+            )
 
         total_cost = order.price * order.quantity
         self.update_cash(-total_cost)

@@ -3,7 +3,7 @@ import dataclasses as dataclass
 
 import pytest
 
-from models import MarketDataPoint, Order
+from models import MarketDataPoint, Order, OrderStatus
 
 
 def test_immutable():
@@ -23,7 +23,7 @@ def test_immutable():
 
 
 def test_mutable():
-    order = Order("APPL", 100, 100, "PENDING")
+    order = Order("APPL", 100, 100, OrderStatus.PENDING)
     
     order.symbol = "ABCD"
     assert order.symbol == "ABCD"
@@ -34,5 +34,5 @@ def test_mutable():
     order.price = 150.0
     assert order.price == 150.0
     
-    order.status = "COMPLETED"
-    assert order.status == "COMPLETED"
+    order.status = OrderStatus.COMPLETED
+    assert order.status == OrderStatus.COMPLETED

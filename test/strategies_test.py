@@ -1,8 +1,7 @@
 from datetime import datetime
 
-
 import strategies
-from models import MarketDataPoint
+from models import Action, MarketDataPoint
 
 
 def test_moving_avg_crossover():
@@ -58,5 +57,5 @@ def test_moving_avg_crossover():
         signals.extend(strategy.generate_signals(tick))
 
     assert len(signals) == 2
-    assert signals[0] == ("AAPL", 10, 108, "BUY")
-    assert signals[1] == ("AAPL", 0, 110, "HOLD")
+    assert signals[0] == ("AAPL", 10, 108, Action.BUY)
+    assert signals[1] == ("AAPL", 0, 110, Action.HOLD)
