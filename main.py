@@ -32,6 +32,7 @@ def main(args):
     engine = ExecutionEngine(strategies, portfolio, failure_rate)
     engine.process_ticks(ticks)
 
+    print(f"Final portfolio cash: {portfolio.cash}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])

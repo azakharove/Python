@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
+from enum import Enum
 
 
 @dataclass(frozen=True)
@@ -11,7 +11,7 @@ class MarketDataPoint:
     symbol: str
     price: float
 
-class OrderStatus(StrEnum):
+class OrderStatus(str, Enum):
     """Enum representing the status of an order."""
 
     PENDING = "PENDING"
@@ -27,7 +27,7 @@ class Order:
         self.price = price
         self.status = status
 
-class Action(StrEnum):
+class Action(str, Enum):
     """Enum representing the action of an order."""
 
     BUY = "BUY"

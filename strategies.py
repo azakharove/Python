@@ -29,13 +29,14 @@ class MovingAverageCrossoverStrategy(Strategy):
     """
 
     def __init__(
-        self, short_window: int = 20, long_window: int = 50, quantity: int = 100
+        self, short_window: int = 20, long_window: int = 50, quantity: int = 100, max_position_multiplier: int = 3
     ):
         super().__init__(quantity=quantity)
         assert short_window < long_window and short_window > 0 and long_window > 0
         self.short_window = short_window
         self.long_window = long_window
-        self.last_signal = None
+        self.position = 0
+        self.max_position = quantity * max_position_multiplier  # Max shares we can hold
 
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
         self._prices.append(tick.price)
@@ -47,12 +48,14 @@ class MovingAverageCrossoverStrategy(Strategy):
 
         signals = []
 
-        if short_ma > long_ma and self.last_signal != Action.BUY:
+        # Buy when short MA > long MA and position below max
+        if short_ma > long_ma and self.position < self.max_position:
             signals.append((tick.symbol, self.quantity, tick.price, Action.BUY))
-            self.last_signal = Action.BUY
-        elif short_ma < long_ma and self.last_signal != Action.SELL:
-            signals.append((tick.symbol, -self.quantity, tick.price, Action.SELL))
-            self.last_signal = Action.SELL
+            self.position += self.quantity
+        # Sell when short MA < long MA and we have a position
+        elif short_ma < long_ma and self.position > 0:
+            signals.append((tick.symbol, -self.position, tick.price, Action.SELL))
+            self.position = 0
         else:
             signals.append((tick.symbol, 0, tick.price, Action.HOLD))
 
@@ -63,13 +66,16 @@ class MomentumStrategy(Strategy):
     "Analyses price momentum to generate buy signals for upward trends and sell signals for downward trends."
 
     def __init__(
-        self, lookback: int = 10, holding_period: int = 5, quantity: int = 100
+        self, lookback: int = 10, holding_period: int = 5, quantity: int = 100, momentum_threshold: float = 0.02, max_position_multiplier: int = 3
     ):
         super().__init__(quantity=quantity)
         assert lookback > 0 and holding_period > 0
         self.lookback = lookback
         self.holding_period = holding_period
+        self.momentum_threshold = momentum_threshold  # 2% default threshold
         self.hold = 0
+        self.position = 0  # Track current position
+        self.max_position = quantity * max_position_multiplier  # Max shares we can hold
 
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
         self._prices.append(tick.price)
@@ -77,6 +83,7 @@ class MomentumStrategy(Strategy):
             return []
 
         momentum = tick.price - self._prices[-self.lookback]
+        momentum_pct = momentum / self._prices[-self.lookback]  
 
         if self.hold > 0:
             self.hold -= 1
@@ -84,12 +91,16 @@ class MomentumStrategy(Strategy):
 
         signals = []
 
-        if momentum > 0:
+        # Buy on strong positive momentum if below max position
+        if momentum_pct > self.momentum_threshold and self.position < self.max_position:
             signals.append((tick.symbol, self.quantity, tick.price, Action.BUY))
             self.hold = self.holding_period
-        elif momentum < 0:
-            signals.append((tick.symbol, -self.quantity, tick.price, Action.SELL))
+            self.position += self.quantity
+        # Sell on strong negative momentum if we have a position
+        elif momentum_pct < -self.momentum_threshold and self.position > 0:
+            signals.append((tick.symbol, -self.position, tick.price, Action.SELL))
             self.hold = self.holding_period
+            self.position = 0
         else:
             signals.append((tick.symbol, 0, tick.price, Action.HOLD))
 
