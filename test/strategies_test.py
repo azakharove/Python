@@ -58,4 +58,60 @@ def test_moving_avg_crossover():
 
     assert len(signals) == 2
     assert signals[0] == ("AAPL", 10, 108, Action.BUY)
-    assert signals[1] == ("AAPL", 0, 110, Action.HOLD)
+    assert signals[1] == ("AAPL", 10, 110, Action.HOLD)
+    
+def test_momentum(
+    strategy = strategies.MomentumStrategy(
+        lookback = 3, holding_period = 2, quantity = 10
+    )):
+    ticks = [
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=1
+            ),
+            symbol="AAPL",
+            price=100,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=2
+            ),
+            symbol="AAPL",
+            price=101,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=3
+            ),
+            symbol="AAPL",
+            price=102,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=4
+            ),
+            symbol="AAPL",
+            price=106,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=5
+            ),
+            symbol="AAPL",
+            price=104,
+        ),
+        MarketDataPoint(
+            timestamp=datetime(
+                year=2025, month=9, day=21, hour=19, minute=54, second=6
+            ),
+            symbol="AAPL",
+            price=102,
+        ),
+    ]
+    signals = []
+    for tick in ticks:
+        signals.extend(strategy.generate_signals(tick))
+
+    assert len(signals) == 2
+    assert signals[0] == ("AAPL", 10, 102, Action.BUY)
+    assert signals[1] == ("AAPL", 10, 104, Action.SELL)
