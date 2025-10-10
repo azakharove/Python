@@ -6,6 +6,7 @@ import data_loader
 from portfolio import Portfolio
 from engine import ExecutionEngine
 from strategies import MovingAverageCrossoverStrategy, MomentumStrategy
+from reporting import report_performance
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Trading system")
@@ -32,28 +33,37 @@ def main(args):
     engine = ExecutionEngine(strategies, portfolio, failure_rate)
     engine.process_ticks(ticks)
 
+    # Generate performance report
+    metrics = report_performance(portfolio, cash, ticks)
+    
     # Get final prices for each symbol
     final_prices = {}
     for tick in reversed(ticks):
         if tick.symbol not in final_prices:
             final_prices[tick.symbol] = tick.price
     
-    # Calculate total portfolio value
+    # Calculate holdings value
     holdings = portfolio.get_all_holdings()
-    total_value = portfolio.get_total_value(final_prices)
-    holdings_value = total_value - portfolio.cash
+    holdings_value = metrics['final_value'] - portfolio.cash
     
-    print(f"\n{'='*50}")
+    print(f"\n{'='*60}")
     print(f"FINAL PORTFOLIO SUMMARY")
-    print(f"{'='*50}")
-    print(f"Initial capital:     ${cash:,.2f}")
+    print(f"{'='*60}")
+    print(f"Initial capital:     ${metrics['starting_value']:,.2f}")
     print(f"Final cash:          ${portfolio.cash:,.2f}")
     print(f"Holdings value:      ${holdings_value:,.2f}")
-    print(f"Total portfolio:     ${total_value:,.2f}")
-    print(f"P&L:                 ${total_value - cash:,.2f} ({((total_value - cash) / cash * 100):+.2f}%)")
+    print(f"Total portfolio:     ${metrics['final_value']:,.2f}")
+    print(f"P&L:                 ${metrics['pnl']:,.2f} ({metrics['total_return']:+.2f}%)")
+    print(f"\n{'='*60}")
+    print(f"PERFORMANCE METRICS")
+    print(f"{'='*60}")
+    print(f"Sharpe Ratio:        N/A")
+    print(f"Max Drawdown:        N/A")
     
     if holdings:
-        print(f"\nCurrent Holdings:")
+        print(f"\n{'='*60}")
+        print(f"CURRENT HOLDINGS")
+        print(f"{'='*60}")
         for symbol, holding in holdings.items():
             current_price = final_prices.get(symbol, 0)
             position_value = holding["quantity"] * current_price

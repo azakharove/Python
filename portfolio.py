@@ -67,21 +67,17 @@ class Portfolio:
             return holding["quantity"] >= abs(order.quantity)
     
     def get_all_holdings(self):
-        """Return a copy of all holdings."""
         return {symbol: {"quantity": data["quantity"], "avg_price": data["avg_price"]} 
                 for symbol, data in self.__holdings.items()}
     
-    def get_total_value(self, current_prices: dict) -> float:
-        """Calculate total portfolio value (cash + value of holdings at current prices).
-        
-        Args:
-            current_prices: dict mapping symbols to current market prices
-        
-        Returns:
-            Total portfolio value
-        """
-        holdings_value = sum(
+    def get_holdings_value(self, current_prices: dict) -> float:
+        return sum(
             holding["quantity"] * current_prices.get(symbol, holding["avg_price"])
             for symbol, holding in self.__holdings.items()
         )
-        return self.cash + holdings_value
+    
+    def get_cash(self) -> float:
+        return self.cash
+
+    def get_portfolio_value(self, current_prices: dict) -> float:
+        return self.get_cash() + self.get_holdings_value(current_prices)
