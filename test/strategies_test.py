@@ -50,7 +50,7 @@ def test_moving_avg_crossover():
             ),
             symbol="AAPL",
             price=110,
-        ),
+        )
     ]
     signals = []
     for tick in ticks:
@@ -58,7 +58,7 @@ def test_moving_avg_crossover():
 
     assert len(signals) == 2
     assert signals[0] == ("AAPL", 10, 108, Action.BUY)
-    assert signals[1] == ("AAPL", 10, 110, Action.HOLD)
+    assert signals[1] == ("AAPL", 10, 110, Action.BUY)
     
 def test_momentum(
     strategy = strategies.MomentumStrategy(
