@@ -57,7 +57,7 @@ def test_moving_avg_crossover():
         signals.extend(strategy.generate_signals(tick))
 
     assert len(signals) == 2
-    assert signals[0] == ("AAPL", 10, 108, Action.BUY)
+    assert signals[0] == ("AAPL", 10, 108, Action.BUY) 
     assert signals[1] == ("AAPL", 10, 110, Action.BUY)
     
 def test_momentum(
@@ -113,5 +113,5 @@ def test_momentum(
         signals.extend(strategy.generate_signals(tick))
 
     assert len(signals) == 2
-    assert signals[0] == ("AAPL", 10, 102, Action.BUY)
-    assert signals[1] == ("AAPL", 10, 104, Action.SELL)
+    assert signals[0] == ("AAPL", 0, 102, Action.HOLD) # momentum_pct = 2%, so signal, no holding period
+    assert signals[1] == ("AAPL", 10, 106, Action.BUY) # momentum_pct = 3.92%, buy signal, holding period starts
