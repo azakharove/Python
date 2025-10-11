@@ -1,6 +1,8 @@
 import random
+from datetime import datetime
+from typing import List, Tuple, Optional
 
-from models import Action, MarketDataPoint, Order, OrderStatus
+from models import Action, MarketDataPoint, Order, OrderStatus, RecordingInterval
 from portfolio import Portfolio
 from strategies import Strategy
 from exceptions import ExecutionError, OrderError
@@ -17,16 +19,48 @@ class ExecutionEngine:
     """
 
     def __init__(
-        self, strategies: list[Strategy], portfolio: Portfolio, failure_rate: float = 0.05
+        self, 
+        strategies: list[Strategy], 
+        portfolio: Portfolio, 
+        failure_rate: float = 0.05, 
+        recording_interval: RecordingInterval = RecordingInterval.SECOND
     ):
         self.strategies = strategies
         self.portfolio = portfolio
         self.failure_rate = failure_rate  # Simulate 5% failure rate by default
+        self.recording_interval = recording_interval
+        self.portfolio_history: List[Tuple[datetime, float]] = []
+        self.last_recorded_period: Optional[tuple] = None
+        self.current_prices: dict[str, float] = {}
 
+    def record_portfolio_value(self, timestamp: datetime, value: float):
+        self.portfolio_history.append((timestamp, value))
+    
+    def _get_period(self, timestamp: datetime) -> tuple:
+        """Extract period identifier from timestamp based on recording_interval."""
+        match self.recording_interval:
+            case RecordingInterval.TICK:
+                return (timestamp,)  # Every single tick
+            case RecordingInterval.SECOND:
+                return (timestamp.year, timestamp.month, timestamp.day, timestamp.hour, timestamp.minute, timestamp.second)
+            case RecordingInterval.MINUTE:
+                return (timestamp.year, timestamp.month, timestamp.day, timestamp.hour, timestamp.minute)
+            case RecordingInterval.HOURLY:
+                return (timestamp.year, timestamp.month, timestamp.day, timestamp.hour)
+            case RecordingInterval.DAILY:
+                return (timestamp.year, timestamp.month, timestamp.day)
+            case RecordingInterval.WEEKLY:
+                return (timestamp.year, timestamp.isocalendar()[1])  # ISO week number
+            case RecordingInterval.MONTHLY:
+                return (timestamp.year, timestamp.month)
+            case _:
+                raise ValueError(f"Unknown recording interval: {self.recording_interval}")
+    
     def process_tick(self, tick: MarketDataPoint):
         for strategy in self.strategies:
             try:
                 signals = strategy.generate_signals(tick)
+                self.current_prices[tick.symbol] = tick.price
                 for symbol, quantity, price, action in signals:
                     if action != Action.HOLD:
                         order = Order(
@@ -44,6 +78,15 @@ class ExecutionEngine:
 
         for tick in ticks:
             self.process_tick(tick)
+            
+            # Determine current period
+            current_period = self._get_period(tick.timestamp)
+            
+            # Record portfolio value when period changes
+            if self.last_recorded_period is None or current_period != self.last_recorded_period:
+                portfolio_value = self.portfolio.get_portfolio_value(self.current_prices)
+                self.record_portfolio_value(tick.timestamp, portfolio_value)
+                self.last_recorded_period = current_period
 
     def execute_order(self, order: Order):
         try:
@@ -75,3 +118,9 @@ class ExecutionEngine:
         except OrderError as e:
             print(e)
             order.status = OrderStatus.FAILED
+
+    def get_portfolio_history(self):
+        return self.portfolio_history
+    
+    def get_current_prices(self):
+        return self.current_prices

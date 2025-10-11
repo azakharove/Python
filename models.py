@@ -33,3 +33,14 @@ class Action(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
     HOLD = "HOLD"
+
+class RecordingInterval(str, Enum):
+    """Enum representing the frequency of portfolio value recording."""
+    
+    TICK = "tick"           # Every tick (very high frequency)
+    SECOND = "1s"           # Every 1 second
+    MINUTE = "1m"           # Every 1 minute
+    HOURLY = "1h"           # Every hour
+    DAILY = "1d"            # Once per day
+    WEEKLY = "1w"           # Once per week
+    MONTHLY = "1mo"         # Once per month

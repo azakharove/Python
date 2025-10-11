@@ -7,6 +7,7 @@ from portfolio import Portfolio
 from engine import ExecutionEngine
 from strategies import MovingAverageCrossoverStrategy, MomentumStrategy
 from reporting import report_performance
+from models import RecordingInterval
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Trading system")
@@ -14,6 +15,9 @@ def parse_args(args):
     parser.add_argument('-q', "--quantity", type=int, default=10)
     parser.add_argument('-f', "--failure_rate", type=float, default=0.05)
     parser.add_argument('-c', "--cash", type=float, default=100000)
+    parser.add_argument('-i', "--interval", type=str, default="1s",
+                        choices=[e.value for e in RecordingInterval],
+                        help="Portfolio recording interval (tick, 1s, 1m, 1h, 1d, 1mo)")
 
     return parser.parse_args(args)
 
@@ -23,6 +27,8 @@ def main(args):
     quantity = parsed_args.quantity
     failure_rate = parsed_args.failure_rate
     cash = parsed_args.cash
+    interval = RecordingInterval(parsed_args.interval)
+    
     # data_generator.generate_market_csv(csv_path)
     ticks = data_loader.load_market_data(csv_path)
     print(f"Loaded {len(ticks)} market data points.")
@@ -30,27 +36,24 @@ def main(args):
     strategies = [MovingAverageCrossoverStrategy(quantity=quantity), MomentumStrategy(quantity=quantity)]
 
     portfolio = Portfolio(cash=cash)
-    engine = ExecutionEngine(strategies, portfolio, failure_rate)
+    engine = ExecutionEngine(strategies, portfolio, failure_rate, recording_interval=interval)
     engine.process_ticks(ticks)
 
     # Generate performance report
-    metrics = report_performance(portfolio, cash, ticks)
+    current_prices = engine.get_current_prices()
+    metrics = report_performance(portfolio, cash, ticks, current_prices)
     
-    # Get final prices for each symbol
-    final_prices = {}
-    for tick in reversed(ticks):
-        if tick.symbol not in final_prices:
-            final_prices[tick.symbol] = tick.price
+
     
-    # Calculate holdings value
+    # Get holdings
     holdings = portfolio.get_all_holdings()
-    holdings_value = metrics['final_value'] - portfolio.cash
+    holdings_value = metrics['final_value'] - portfolio.get_cash()
     
     print(f"\n{'='*60}")
     print(f"FINAL PORTFOLIO SUMMARY")
     print(f"{'='*60}")
     print(f"Initial capital:     ${metrics['starting_value']:,.2f}")
-    print(f"Final cash:          ${portfolio.cash:,.2f}")
+    print(f"Final cash:          ${portfolio.get_cash():,.2f}")
     print(f"Holdings value:      ${holdings_value:,.2f}")
     print(f"Total portfolio:     ${metrics['final_value']:,.2f}")
     print(f"P&L:                 ${metrics['pnl']:,.2f} ({metrics['total_return']:+.2f}%)")
@@ -65,9 +68,9 @@ def main(args):
         print(f"CURRENT HOLDINGS")
         print(f"{'='*60}")
         for symbol, holding in holdings.items():
-            current_price = final_prices.get(symbol, 0)
-            position_value = holding["quantity"] * current_price
-            print(f"  {symbol}: {holding['quantity']} shares @ ${current_price:.2f} = ${position_value:,.2f}")
+            price = current_prices.get(symbol, 0)
+            position_value = holding["quantity"] * price
+            print(f"  {symbol}: {holding['quantity']} shares @ ${price:.2f} = ${position_value:,.2f}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
