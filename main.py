@@ -41,7 +41,8 @@ def main(args):
 
     # Generate performance report
     current_prices = engine.get_current_prices()
-    metrics = report_performance(portfolio, cash, ticks, current_prices)
+    periodic_returns = engine.get_portfolio_history()
+    metrics = report_performance(portfolio, cash, ticks, current_prices, periodic_returns)
     
 
     
@@ -60,8 +61,8 @@ def main(args):
     print(f"\n{'='*60}")
     print(f"PERFORMANCE METRICS")
     print(f"{'='*60}")
-    print(f"Sharpe Ratio:        N/A")
-    print(f"Max Drawdown:        N/A")
+    print(f"Sharpe Ratio:        {metrics['sharpe_ratio']:.2f}")
+    print(f"Max Drawdown:        {metrics['max_drawdown']:.2f}%")
     
     if holdings:
         print(f"\n{'='*60}")
