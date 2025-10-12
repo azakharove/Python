@@ -1,8 +1,8 @@
 import pytest
 
-from portfolio import Portfolio
-from models import Order, OrderStatus
-from exceptions import OrderError
+from trading_lib.portfolio import Portfolio
+from trading_lib.models import Order, OrderStatus
+from trading_lib.exceptions import OrderError
 
 
 def test_update_cash():

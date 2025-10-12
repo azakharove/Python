@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from models import MarketDataPoint
+from trading_lib.models import MarketDataPoint
 
 
 def _parse_timestamp(ts: str) -> datetime:

@@ -2,10 +2,10 @@ import random
 from datetime import datetime
 from typing import List, Tuple, Optional
 
-from models import Action, MarketDataPoint, Order, OrderStatus, RecordingInterval
-from portfolio import Portfolio
-from strategies import Strategy
-from exceptions import ExecutionError, OrderError
+from trading_lib.models import Action, MarketDataPoint, Order, OrderStatus, RecordingInterval
+from trading_lib.portfolio import Portfolio
+from trading_lib.strategy import Strategy
+from trading_lib.exceptions import ExecutionError, OrderError
 
 
 class ExecutionEngine:

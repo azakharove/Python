@@ -2,12 +2,15 @@ from pathlib import Path
 import sys
 import argparse
 
-import data_loader  
-from portfolio import Portfolio
-from engine import ExecutionEngine
+from trading_lib.portfolio import Portfolio
+from trading_lib.engine import ExecutionEngine
+from trading_lib.reporting import generate_performance_report, report_performance
+from trading_lib.models import RecordingInterval
+
+# Local Assignment1 modules
+sys.path.insert(0, str(Path(__file__).parent))
+import data_loader
 from strategies import MovingAverageCrossoverStrategy, MomentumStrategy
-from reporting import generate_performance_report, report_performance
-from models import RecordingInterval
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Trading system")

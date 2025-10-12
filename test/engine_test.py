@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from engine import ExecutionEngine
-from portfolio import Portfolio
-import strategies
-from models import MarketDataPoint
+from trading_lib.engine import ExecutionEngine
+from trading_lib.portfolio import Portfolio
+import Assignment1.strategies as strategies
+from trading_lib.models import MarketDataPoint
 
 
 def test_moving_avg_crossover_strategy():
