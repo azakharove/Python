@@ -7,6 +7,7 @@ from portfolio import Portfolio
 from engine import ExecutionEngine
 from strategies import MovingAverageCrossoverStrategy, MomentumStrategy
 from reporting import report_performance
+from reporting import equity_curve_plot
 from models import RecordingInterval
 
 def parse_args(args):
@@ -72,6 +73,11 @@ def main(args):
             price = current_prices.get(symbol, 0)
             position_value = holding["quantity"] * price
             print(f"  {symbol}: {holding['quantity']} shares @ ${price:.2f} = ${position_value:,.2f}")
+
+    # equity curve plot
+    equity_curve_plot(periodic_returns, file_name="equity_curve.png")
+    
+    # narrative
 
 if __name__ == "__main__":
     main(sys.argv[1:])

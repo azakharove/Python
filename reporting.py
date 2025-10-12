@@ -1,22 +1,21 @@
 from typing import List, Dict
 import statistics
+import matplotlib.pyplot as plt
 from engine import ExecutionEngine
-
 from models import MarketDataPoint
 from portfolio import Portfolio
 
 
 def calculate_max_drawdown(periodic_returns) -> float:
-    """Calculate Sharpe ratio using periodic returns"""
+    """Calculate Sharpe ratio using periodic"""
     values = [value[1] for value in periodic_returns]
-    equity = 1.0
     peak = values[0]
     max_dd = 0.0
 
     for value in values:
         if value > peak:
             peak = value
-        drawdown = ((value - peak) / peak) * 100  # negative during declines
+        drawdown = ((value - peak) / peak) * 100
         if drawdown < max_dd:
             max_dd = drawdown
 
@@ -52,3 +51,22 @@ def report_performance(portfolio: Portfolio, starting_cash: float, ticks: List[M
         "final_value": final_value,
         "starting_value": starting_cash
     }
+
+def equity_curve_plot(portfolio_history, file_name = "equity_curve.png"):
+    """Generate equity curve plot from portfolio history."""
+
+    dates, values = zip(*portfolio_history)
+    plt.figure(figsize=(10, 6))
+    plt.plot(dates, values, label='Portfolio Value', color='blue')
+    plt.xlabel('Date')
+    plt.ylabel('Portfolio Value ($)')
+    plt.title('Equity Curve')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    plt.savefig(file_name)
+    plt.close()
+
+    link = f"! [Equity Curve](Path{file_name}))"
+    return link
