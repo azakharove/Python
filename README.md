@@ -34,7 +34,7 @@ python Assignment1/main.py -c 50000 -q 100 -f 0.1 -d data/market_data.csv
 
 Run all tests:
 ```bash
-python -m pytest test/
+pytest test/
 ```
 
 ## Code Quality
