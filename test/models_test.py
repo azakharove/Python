@@ -3,7 +3,7 @@ import dataclasses as dataclass
 
 import pytest
 
-from models import MarketDataPoint, Order, OrderStatus
+from trading_lib.models import MarketDataPoint, Order, OrderStatus
 
 
 def test_immutable():

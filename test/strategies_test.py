@@ -1,7 +1,7 @@
 from datetime import datetime
 
-import strategies
-from models import Action, MarketDataPoint
+import Assignment1.strategies as strategies
+from trading_lib.models import Action, MarketDataPoint
 
 
 def test_moving_avg_crossover():
