@@ -24,8 +24,13 @@ def calculate_max_drawdown(periodic_returns) -> float:
 def calculate_sharpe_ratio(periodic_returns) -> float:
     """Calculate Max Drawdown using periodic returns"""
     values = [value[1] for value in periodic_returns]
-    mean = statistics.fmean(values)
-    stddev = statistics.pstdev(values)
+    returns = [
+        (values[i] - values[i - 1]) / values[i - 1]
+        for i in range(1, len(values))
+        if values[i - 1] != 0
+    ]
+    mean = statistics.fmean(returns)
+    stddev = statistics.pstdev(returns)
     if stddev == 0:
         return 0.0
     sharpe = mean / stddev
@@ -70,3 +75,19 @@ def equity_curve_plot(portfolio_history, file_name = "equity_curve.png"):
 
     link = f"! [Equity Curve](Path{file_name}))"
     return link
+
+def narrative_interpretation(metrics):
+    """Generate a narrative interpretation of the performance metrics."""
+    if metrics['sharpe_ratio'] > 1.0 and metrics['max_drawdown'] < 20.0:
+        interpretation = (f"The strategy performed exceptionally well with a Sharpe ratio of {metrics['sharpe_ratio']:.2f}, "
+                          f"returning a final portfolio value of ${metrics['final_value']:,.2f} while maintaining drawdowns of {metrics['max_drawdown']:.2f}%. "
+                          "This indicates a strong risk-adjusted return and effective risk management.")
+    elif metrics['sharpe_ratio'] > 0.5:
+        interpretation = (f"The strategy showed decent performance with a Sharpe ratio of {metrics['sharpe_ratio']:.2f}, "
+                          f"achieving a final portfolio value of ${metrics['final_value']:,.2f} and drawdowns of {metrics['max_drawdown']:.2f}%. "
+                          "This suggests moderate volatility with room for improvement in risk management.")
+    else:
+        interpretation = (f"The strategy had a low Sharpe ratio of {metrics['sharpe_ratio']:.2f}, "
+                          f"resulting in a final portfolio value of ${metrics['final_value']:,.2f} and drawdowns of {metrics['max_drawdown']:.2f}%. "
+                          "This indicates that the returns were not sufficient to compensate for the risk taken, highlighting the need for strategy refinement.")
+    print(interpretation)
