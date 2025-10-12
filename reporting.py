@@ -68,9 +68,9 @@ def equity_curve_plot(portfolio_history, file_name = "equity_curve.png"):
     plt.title('Equity Curve')
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
-
-    plt.savefig(file_name)
+    
+    # Save BEFORE show, otherwise the figure will be cleared
+    plt.savefig(file_name, dpi=300, bbox_inches='tight')
     plt.close()
 
     link = f"! [Equity Curve](Path{file_name}))"
@@ -90,4 +90,80 @@ def narrative_interpretation(metrics):
         interpretation = (f"The strategy had a low Sharpe ratio of {metrics['sharpe_ratio']:.2f}, "
                           f"resulting in a final portfolio value of ${metrics['final_value']:,.2f} and drawdowns of {metrics['max_drawdown']:.2f}%. "
                           "This indicates that the returns were not sufficient to compensate for the risk taken, highlighting the need for strategy refinement.")
-    print(interpretation)
+    return interpretation
+
+
+def generate_performance_report(metrics, portfolio_history, output_file="performance.md"):
+    """Generate a complete performance.md report with metrics, chart, and narrative."""
+    
+    # Generate equity curve plot
+    chart_filename = "equity_curve.png"
+    equity_curve_plot(portfolio_history, chart_filename)
+    
+    # Get narrative interpretation
+    narrative = narrative_interpretation(metrics)
+    
+    # Build the markdown report
+    report = f"""# Trading Strategy Performance Report
+
+## Summary Metrics
+
+| Metric | Value |
+|--------|-------|
+| Starting Value | ${metrics['starting_value']:,.2f} |
+| Final Value | ${metrics['final_value']:,.2f} |
+| Total Return | {metrics['total_return']:.2f}% |
+| P&L | ${metrics['pnl']:,.2f} |
+| Sharpe Ratio | {metrics['sharpe_ratio']:.2f} |
+| Max Drawdown | {metrics['max_drawdown']:.2f}% |
+
+## Equity Curve
+
+![Equity Curve]({chart_filename})
+
+## Performance Analysis
+
+{narrative}
+
+## Interpretation
+
+### Sharpe Ratio ({metrics['sharpe_ratio']:.2f})
+"""
+    
+    if metrics['sharpe_ratio'] > 1.0:
+        report += "- **Excellent**: Risk-adjusted returns are strong. The strategy generates good returns relative to volatility.\n"
+    elif metrics['sharpe_ratio'] > 0.5:
+        report += "- **Moderate**: Acceptable risk-adjusted returns, but there's room for improvement.\n"
+    else:
+        report += "- **Poor**: Returns don't justify the risk taken. Strategy needs refinement.\n"
+    
+    report += f"""
+### Max Drawdown ({metrics['max_drawdown']:.2f}%)
+"""
+    
+    if abs(metrics['max_drawdown']) < 10:
+        report += "- **Low**: Excellent risk management with minimal losses from peak.\n"
+    elif abs(metrics['max_drawdown']) < 20:
+        report += "- **Moderate**: Acceptable drawdown levels, but consider risk mitigation strategies.\n"
+    else:
+        report += "- **High**: Significant losses from peak. Review risk management and position sizing.\n"
+    
+    report += f"""
+### Total Return ({metrics['total_return']:.2f}%)
+"""
+    
+    if metrics['total_return'] > 20:
+        report += "- **Strong**: Strategy generated substantial profits.\n"
+    elif metrics['total_return'] > 0:
+        report += "- **Positive**: Strategy was profitable, though returns could be improved.\n"
+    else:
+        report += "- **Negative**: Strategy lost money. Requires significant adjustments.\n"
+    
+    report += "\n---\n*Report generated automatically from backtesting results*\n"
+    
+    # Write to file
+    with open(output_file, 'w') as f:
+        f.write(report)
+    
+    print(f"Performance report generated: {output_file}")
+    return output_file
