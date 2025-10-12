@@ -1,9 +1,10 @@
 from typing import List, Dict
 import statistics
 import matplotlib.pyplot as plt
-from engine import ExecutionEngine
-from models import MarketDataPoint
-from portfolio import Portfolio
+
+from trading_lib.engine import ExecutionEngine
+from trading_lib.models import MarketDataPoint
+from trading_lib.portfolio import Portfolio
 
 
 def calculate_max_drawdown(periodic_returns) -> float:

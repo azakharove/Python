@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trading_lib"
+version = "0.1.0"
+description = "A simple algorithmic trading backtesting library"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = ["E", "F", "I", "B", "C4", "UP"]
+ignore = ["E501", "B008", "C901"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["test"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.setuptools]
+packages = ["trading_lib"]
+

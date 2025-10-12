@@ -1,5 +1,5 @@
-from models import Order, OrderStatus
-from exceptions import OrderError
+from trading_lib.models import Order, OrderStatus
+from trading_lib.exceptions import OrderError
 
 
 class Portfolio:
