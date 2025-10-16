@@ -6,6 +6,7 @@ import requests
 import yfinance as yf
 import csv
 from datetime import datetime
+import time
 
 from trading_lib.models import MarketDataPoint
 
@@ -68,10 +69,13 @@ class PriceLoader:
         except Exception as e:
             print(f"Error downloading {ticker}: {e}")
 
-    def download_all_tickers(self, type: str = "csv") -> None:
+    def download_all_tickers(self, file_type: str = "csv", batch_size = 50, sleep_sec = 1.0) -> None:
         tickers = self._fetch_snp500_tickers()
-        for ticker in tickers:
-            self.download_ticker(ticker, type)
+        for i in range(0, len(tickers), batch_size):
+            batch = tickers[i:i + batch_size]
+            for ticker in batch:
+                self.download_ticker(ticker, file_type)
+            time.sleep(sleep_sec)
     
     def load_ticker_from_csv(self, ticker: str) -> List[MarketDataPoint]:
         """Load ticker data from CSV file and convert to MarketDataPoint objects."""
