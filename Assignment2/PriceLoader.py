@@ -43,6 +43,14 @@ class PriceLoader:
             data = yf.Ticker(ticker)
             hist = data.history(start=self.start_date, end=self.end_date)
             hist_prices = hist[["Close"]]
+
+            # Drop rows with missing or sparse data
+            hist_prices = hist_prices.dropna(subset=["Close"])
+            expected_coverage = pd.date_range(start=self.start_date, end=self.end_date, freq='B')
+            coverage = len(hist_prices) / len(expected_coverage)
+            if coverage < 0.8:
+                print(f"Warning: {ticker} has low data coverage ({coverage:.2%}). Skipping.")
+                return
             
             # Save to CSV
             output_file = self.output_dir / f"{ticker}.{type}"
@@ -115,7 +123,13 @@ class PriceLoader:
 
     
 if __name__ == "__main__":
-    loader = PriceLoader(start_date="2024-01-01", end_date="2024-12-31")
-    loader.download_ticker("AAPL", "csv")
-    data = loader.load_ticker_from_csv("AAPL")
-    print(data)
+    loader = PriceLoader(start_date="2005-01-01", end_date="2024-12-31")
+    tickers = ("ABNB", "AAPL")
+    for ticker in tickers:
+        loader.download_ticker(ticker, "csv")
+        file_path = loader.output_dir / f"{ticker}.csv"
+        if file_path.exists():
+            data = loader.load_ticker_from_csv(file_path.stem)
+            print(data)
+        else:
+            print("No data file found for {ticker} (likely skipped due to sparse data).")
