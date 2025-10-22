@@ -4,4 +4,4 @@ class MACDStrategy(Strategy):
     """
     Buy if MACD line crosses above signal line
     """
-   pass
+    pass
