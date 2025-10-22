@@ -1,4 +1,7 @@
 from trading_lib.strategy import Strategy
 
 class MACDStrategy(Strategy):
-    pass
+    """
+    Buy if MACD line crosses above signal line
+    """
+   pass
