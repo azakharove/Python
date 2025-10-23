@@ -1,4 +1,5 @@
 from typing import Dict, List
+from datetime import datetime, timedelta
 
 from trading_lib.strategy import Strategy
 from trading_lib.models import MarketDataPoint, Action
@@ -44,19 +45,47 @@ class RSIStrategy(Strategy):
         return rsi
     
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
-        if tick.symbol not in self._prices:
-            self._prices[tick.symbol] = [tick.price]
-            return []
-        
-        self._prices[tick.symbol].append(tick.price)
+        sym, price = tick.symbol, tick.price
 
-        if len(self._prices[tick.symbol]) < self.window + 1:
+        if sym not in self._prices:
+            self._prices[sym] = [price]
             return []
         
-        self._prices[tick.symbol] = self._prices[tick.symbol][-(self.window + 1):]
+        prev_prices = self._prices[sym]
         
-        rsi = self._calculate_rsi(self._prices[tick.symbol])
+        if len(prev_prices) < self.window + 1:
+            self._prices[sym].append(price)
+            return []
+        
+        rsi = self._calculate_rsi(prev_prices)
+        
+        signals = []
         if rsi < 30:
-            return [(tick.symbol, self.quantity, tick.price, Action.BUY)]
-        else:
-            return []
+            signals.append((sym, self.quantity, price, Action.BUY))
+        
+        prev_prices.append(price)
+
+        self._prices[sym] = prev_prices[-(self.window + 1):]
+        
+        return signals
+        
+
+
+if __name__ == "__main__":
+    # Use smaller window for testing
+    strategy = RSIStrategy(window=5, quantity=100)
+    
+    # Create price data that will generate a buy signal (oversold condition)
+    # RSI < 30 means the stock is oversold, so we need declining prices
+    ticks = []
+    base_time = datetime(2025, 1, 1, 10, 0, 0)
+    
+    # Create declining prices to generate low RSI (oversold condition)
+    # Start high, then decline consistently to create oversold RSI
+    prices = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55]
+    for i, price in enumerate(prices):
+        ticks.append(MarketDataPoint(timestamp=base_time + timedelta(seconds=i), symbol="AAPL", price=price))
+    
+    for tick in ticks:
+        signals = strategy.generate_signals(tick)
+        print(tick, signals)
