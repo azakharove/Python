@@ -1,4 +1,5 @@
 from typing import Dict, List
+from datetime import datetime, timedelta
 
 from trading_lib.strategy import Strategy
 from trading_lib.models import MarketDataPoint, Action
@@ -60,3 +61,23 @@ class RSIStrategy(Strategy):
             return [(tick.symbol, self.quantity, tick.price, Action.BUY)]
         else:
             return []
+
+
+if __name__ == "__main__":
+    # Use smaller window for testing
+    strategy = RSIStrategy(window=5, quantity=100)
+    
+    # Create price data that will generate a buy signal (oversold condition)
+    # RSI < 30 means the stock is oversold, so we need declining prices
+    ticks = []
+    base_time = datetime(2025, 1, 1, 10, 0, 0)
+    
+    # Create declining prices to generate low RSI (oversold condition)
+    # Start high, then decline consistently to create oversold RSI
+    prices = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55]
+    for i, price in enumerate(prices):
+        ticks.append(MarketDataPoint(timestamp=base_time + timedelta(seconds=i), symbol="AAPL", price=price))
+    
+    for tick in ticks:
+        signals = strategy.generate_signals(tick)
+        print(tick, signals)
