@@ -14,28 +14,41 @@ class MovingAverageStrategy(Strategy):
         self.short_window = short_window
         self.long_window = long_window
         self._prices: Dict[str, List[float]] = {}
+        # track previous MA relationship to catch true crossovers
+        self._prev_short_gt_long: Dict[str, bool] = {}
 
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
-        if tick.symbol not in self._prices:
-            self._prices[tick.symbol] = [tick.price]
+        sym, price = tick.symbol, tick.price
+        
+        if sym not in self._prices:
+            self._prices[sym] = [price]
+            self._prev_short_gt_long[sym] = False
             return []
         
-        self._prices[tick.symbol].append(tick.price)
+        prev_prices = self._prices[sym]
         
         # Wait for enough prices to calculate moving averages
-        if len(self._prices[tick.symbol]) < self.long_window:
+        if len(prev_prices) < self.long_window:
+            self._prices[sym].append(price)
             return []
         
-        # Keep only the last long_window prices for memory efficiency
-        self._prices[tick.symbol] = self._prices[tick.symbol][-self.long_window:]
+        short_ma = sum(prev_prices[-self.short_window:]) / self.short_window
+        long_ma = sum(prev_prices[-self.long_window:]) / self.long_window
         
-        short_ma = sum(self._prices[tick.symbol][-self.short_window:]) / self.short_window
-        long_ma = sum(self._prices[tick.symbol][-self.long_window:]) / self.long_window
+        prev_state = self._prev_short_gt_long[sym]
+        curr_state = short_ma > long_ma
+
+        signals = []
+        # trigger only on transition from False -> True (crossover up)
+        if (not prev_state) and curr_state:
+            signals.append((sym, self.quantity, price, Action.BUY))
         
-        if short_ma > long_ma:
-            return [(tick.symbol, self.quantity, tick.price, Action.BUY)]
-        else:
-            return []
+        self._prev_short_gt_long[sym] = curr_state
+
+        prev_prices.append(price)
+        self._prices[sym] = prev_prices[-self.long_window:]  # long_window is enough
+        
+        return signals
 
 
 if __name__ == "__main__":

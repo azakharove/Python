@@ -45,22 +45,30 @@ class RSIStrategy(Strategy):
         return rsi
     
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
-        if tick.symbol not in self._prices:
-            self._prices[tick.symbol] = [tick.price]
-            return []
-        
-        self._prices[tick.symbol].append(tick.price)
+        sym, price = tick.symbol, tick.price
 
-        if len(self._prices[tick.symbol]) < self.window + 1:
+        if sym not in self._prices:
+            self._prices[sym] = [price]
             return []
         
-        self._prices[tick.symbol] = self._prices[tick.symbol][-(self.window + 1):]
+        prev_prices = self._prices[sym]
         
-        rsi = self._calculate_rsi(self._prices[tick.symbol])
+        if len(prev_prices) < self.window + 1:
+            self._prices[sym].append(price)
+            return []
+        
+        rsi = self._calculate_rsi(prev_prices)
+        
+        signals = []
         if rsi < 30:
-            return [(tick.symbol, self.quantity, tick.price, Action.BUY)]
-        else:
-            return []
+            signals.append((sym, self.quantity, price, Action.BUY))
+        
+        prev_prices.append(price)
+
+        self._prices[sym] = prev_prices[-(self.window + 1):]
+        
+        return signals
+        
 
 
 if __name__ == "__main__":

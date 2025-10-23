@@ -59,6 +59,7 @@ class MACDStrategy(Strategy):
         self._prices[sym].append(price)
         
         if len(self._prices[sym]) < self.long_window:
+            self._prices[sym].append(price)
             return []
         
         self._prices[sym] = self._prices[sym][-self.long_window:]
@@ -68,6 +69,7 @@ class MACDStrategy(Strategy):
         
         # Wait for enough MACD values to calculate the signal line
         if len(self.macd_history[sym]) < self.signal_window:
+            self.macd_history[sym].append(macd)
             return []
         
         
