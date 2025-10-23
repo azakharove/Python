@@ -8,6 +8,7 @@ class MACDStrategy(Strategy):
     """
     Buy if MACD line crosses above signal line
     """
+
     def __init__(self, short_window: int = 12, long_window: int = 26, signal_window: int = 9, quantity: int = 100):
         super().__init__(quantity)
         self.short_window = short_window
@@ -117,3 +118,4 @@ if __name__ == "__main__":
     for tick in ticks:
         signals = strategy.generate_signals(tick)
         print(tick, signals)
+
