@@ -7,6 +7,7 @@ import yfinance as yf
 import csv
 from datetime import datetime
 import time
+import math
 
 from trading_lib.models import MarketDataPoint
 
@@ -69,14 +70,83 @@ class PriceLoader:
         except Exception as e:
             print(f"Error downloading {ticker}: {e}")
 
-    def download_all_tickers(self, file_type: str = "csv", batch_size = 50, sleep_sec = 1.0) -> None:
-        tickers = self._fetch_snp500_tickers()
-        for i in range(0, len(tickers), batch_size):
-            batch = tickers[i:i + batch_size]
-            for ticker in batch:
-                self.download_ticker(ticker, file_type)
-            time.sleep(sleep_sec)
-    
+    def download_all_tickers(self, type="csv", batch_size=50):
+        "Load historical data for all tickers using server-side batching"
+        expected_dates = pd.date_range(start=self.start_date, end=self.end_date, freq='B')
+        expected_len = len(expected_dates)
+        for i in range(0, len(self.tickers), batch_size):
+            batch = self.tickers[i : i + batch_size]
+            print(f"Downloading batch {i+1}-{i+len(batch)} of {len(self.tickers)}...")
+
+            try:
+                # Download prices for all tickers in this batch
+                df = yf.download(
+                    tickers=batch,
+                    start=self.start_date,
+                    end=self.end_date,
+                    group_by="column",
+                    progress=False,
+                    threads=True,
+                )
+
+                # If multiple tickers are requested, DataFrame has MultiIndex columns
+                if isinstance(df.columns, pd.MultiIndex):
+                    adj = df["Close"]
+
+                    for t in batch:
+                        if t not in adj.columns:
+                            print(f"Warning: {t} missing from result. Skipping.")
+                            continue
+
+                        # Keep only valid non-missing data
+                        hist_prices = adj[t].dropna().to_frame("Close")
+
+                        # Check if coverage is sufficient (>=80% of expected business days)
+                        coverage = (len(hist_prices) / expected_len) if expected_len else 0.0
+                        if coverage < 0.8:
+                            print(f"Warning: {t} has low data coverage ({coverage:.2%}). Skipping.")
+                            continue
+
+                        # Save file in specified format
+                        output_file = self.output_dir / f"{t}.{type}"
+                        match type:
+                            case "csv":
+                                hist_prices.to_csv(output_file)
+                            case "parquet":
+                                hist_prices.to_parquet(output_file)
+                            case _:
+                                raise ValueError(f"Invalid type: {type}")
+
+                        print(f"Saved to {output_file}")
+
+                else:
+                    t = batch[0]
+                    hist_prices = df["Close"].dropna().to_frame("Close")
+
+                    coverage = (len(hist_prices) / expected_len) if expected_len else 0.0
+                    if coverage < 0.8:
+                        print(f"Warning: {t} has low data coverage ({coverage:.2%}). Skipping.")
+                        continue
+
+                    output_file = self.output_dir / f"{t}.{type}"
+                    match type:
+                        case "csv":
+                            hist_prices.to_csv(output_file)
+                        case "parquet":
+                            hist_prices.to_parquet(output_file)
+                        case _:
+                            raise ValueError(f"Invalid type: {type}")
+
+                    print(f"Saved to {output_file}")
+
+            except Exception as e:
+                print(f"Error downloading batch starting at index {i}: {e}")
+
+            except Exception as e:
+                print(f"Error in download_all_tickers: {e}")
+
+            return None
+
     def load_ticker_from_csv(self, ticker: str) -> List[MarketDataPoint]:
         """Load ticker data from CSV file and convert to MarketDataPoint objects."""
         csv_file = self.output_dir / f"{ticker}.csv"
