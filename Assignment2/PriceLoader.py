@@ -227,60 +227,35 @@ class PriceLoader:
     
 if __name__ == "__main__":
     loader = PriceLoader(start_date="2005-01-01", end_date="2024-12-31")
+    loader._fetch_snp500_tickers()
+    loader.download_all_tickers(filetype="csv", batch_size=50)
+    print(f"Fetched and saved data for {len(loader.tickers)} tickers.")
 
-    print("Fetching S&P 500 Tickers from Wikipedia")
-    loader._fetch_snp500_tickers()          # <-- call it
-    print(f"Fetched {len(loader.tickers)}.")
-    print("Sample:", loader.tickers[:5])
+    test_tickers = loader.tickers[:5]
 
-    # Test cleanup + save on one ticker
-    ticker1 = loader.tickers[3] if loader.tickers else "AAPL"
-    print(f"\nCleanup and Save a single ticker: {ticker1}")
-    try:
-        df = yf.download(ticker1, start=loader.start_date, end=loader.end_date,
-                        progress=False, auto_adjust=False)
-        if df.empty:
-            raise ValueError(f"{ticker1}: no data returned")
+    print(f"\nTesting single ticker download for {test_tickers[0]}...")
+    loader.download_ticker(test_tickers[0], type="csv")
 
-        # --- minimal robust selection of a close-like column ---
-        if "Close" in df.columns:
-            close_like = df["Close"]
-        elif "Adj Close" in df.columns:
-            close_like = df["Adj Close"]
-        elif "close" in df.columns:
-            close_like = df["close"]
-        else:
-            raise ValueError(f"{ticker1}: no close-like column found (cols={list(df.columns)})")
-
-        # -------------------------------------------------------
-
-        low_cov, hist_prices = loader.clean_up_price_data(ticker1, close_like)
+    print(f"\nCleaning and saving data for {test_tickers[0]}...")
+    df = yf.download(test_tickers[0], start=loader.start_date, end=loader.end_date, progress=False)
+    if not df.empty:
+        close_like = df["Close"] if "Close" in df.columns else df["Adj Close"]
+        low_cov, hist_prices = loader.clean_up_price_data(test_tickers[0], close_like)
         if not low_cov:
-            loader.save_data_to_file(ticker1, hist_prices, "csv")
+            loader.save_data_to_file(test_tickers[0], hist_prices)
+    else:
+        print(f"No data for {test_tickers[0]}")
 
-    except Exception as e:
-        print(f"Error testing single-ticker cleanup/save: {e}")
+    print(f"\nTesting batch download for {test_tickers}...")
+    loader.download_batch(test_tickers, filetype="csv")
 
-    # Test batch
-    print("\nTesting batch download on first 5 tickers...")
-    batch = loader.tickers[:5] if len(loader.tickers) >= 5 else ["AAPL", "MSFT", "GOOG", "AMZN", "NVDA"]
-    loader.download_batch(batch, filetype="csv")
+    print("\nTesting download_all_tickers on small subset (batch_size=2)...")
+    loader.tickers = test_tickers
+    loader.download_all_tickers(filetype="csv", batch_size=2)
 
-    # Test all (limit to first 10 for speed)
-    print("\nTesting download_all_tickers with batching...")
-    loader.tickers = loader.tickers[:10]
-    loader.download_all_tickers(filetype="csv", batch_size=3)
+    print("\nSaved files:")
+    for t in test_tickers:
+        fp = loader.output_dir / f"{t}.csv"
+        print(f" - {t}: {'Exists' if fp.exists() else 'Missing'}")
 
-    print("\nMain 2.0 Complete")
-
-    # tickers = ("ABNB", "AAPL")
-    # for ticker in tickers:
-    #     loader.download_ticker(ticker, "csv")
-    #     file_path = loader.output_dir / f"{ticker}.csv"
-    #     if file_path.exists():
-    #         data = loader.load_ticker_from_csv(file_path.stem)
-    #         print(data)
-    #     else:
-    #         print("No data file found for {ticker} (likely skipped due to sparse data).")
-
-    # print("\nMain 1.0 Complete")
+    print("\n=== PriceLoader test complete ===")
