@@ -5,6 +5,7 @@ import argparse
 from trading_lib.models import RecordingInterval
 from trading_lib.StrategyComparator import StrategyComparator
 from trading_lib.strategies import MovingAverageCrossoverStrategy, MomentumStrategy
+from BenchmarkStrategy import BenchmarkStrategy
 
 # Local Assignment1 modules
 sys.path.insert(0, str(Path(__file__).parent))
@@ -27,9 +28,9 @@ def main(args):
     
     # data_generator.generate_market_csv(csv_path)
 
-    strategies = [MovingAverageCrossoverStrategy(quantity=quantity), MomentumStrategy(quantity=quantity)]
+    strategies = [MovingAverageCrossoverStrategy(quantity=quantity), BenchmarkStrategy()]
 
-    StrategyComparator().compare_strategies(
+    StrategyComparator(path = "Assignment_2_Results").compare_strategies(
         strategies, 
         parsed_args.cash, 
         parsed_args.failure_rate, 

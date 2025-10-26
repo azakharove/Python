@@ -29,7 +29,7 @@ def main(args):
 
     strategies = [MovingAverageCrossoverStrategy(quantity=quantity), MomentumStrategy(quantity=quantity)]
 
-    StrategyComparator().compare_strategies(
+    StrategyComparator(path = "Assignment_1_Results").compare_strategies(
         strategies, 
         parsed_args.cash, 
         parsed_args.failure_rate, 

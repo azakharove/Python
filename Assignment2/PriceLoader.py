@@ -4,10 +4,6 @@ from typing import List
 import pandas as pd
 import requests
 import yfinance as yf
-import csv
-from datetime import datetime
-import time
-import math
 
 from trading_lib.models import MarketDataPoint
 

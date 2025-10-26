@@ -6,8 +6,9 @@ from trading_lib.reporting import generate_performance_report, calc_performance_
 from trading_lib.data_loader import load_market_data
 
 class StrategyComparator:
-    def __init__(self):
-        pass
+    def __init__(self, path: str = ""):
+        self.path = path
+        
 
     def print_portfolio_summary(self, portfolio: Portfolio, metrics: dict, current_prices: dict[str, float]):
         holdings = portfolio.get_all_holdings()
@@ -57,8 +58,12 @@ class StrategyComparator:
             metrics = calc_performance_metrics(portfolio, cash, ticks, current_prices, periodic_returns)
 
             self.print_portfolio_summary(portfolio, metrics, current_prices)
-
-            generate_performance_report(metrics, periodic_returns, output_file=f"{strategy_name}_performance.md")
+            
+            output_file = strategy_name + "_performance.md"
+            if self.path != "":
+                output_file = self.path + "/" + output_file
+                
+            generate_performance_report(metrics, periodic_returns, output_file)
         
     def compare_strategies(
         self, 

@@ -1,6 +1,7 @@
 from typing import List, Dict
 import statistics
 import matplotlib.pyplot as plt
+import os
 
 from trading_lib.engine import ExecutionEngine
 from trading_lib.models import MarketDataPoint
@@ -163,7 +164,8 @@ def generate_performance_report(metrics, portfolio_history, output_file="perform
     report += "\n---\n*Report generated automatically from backtesting results*\n"
     
     # Write to file
-    with open(output_file, 'w') as f:
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, "w") as f:
         f.write(report)
     
     print(f"Performance report generated: {output_file}")
