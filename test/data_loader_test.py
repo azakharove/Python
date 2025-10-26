@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from Assignment1.data_loader import load_from_reader
+from trading_lib.data_loader import load_from_reader
 
 
 def test_perfect():

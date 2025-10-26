@@ -1,8 +1,7 @@
 from datetime import datetime
 
-import Assignment1.strategies as strategies
+import trading_lib.strategies as strategies
 from trading_lib.models import Action, MarketDataPoint
-
 
 def test_moving_avg_crossover():
     strategy = strategies.MovingAverageCrossoverStrategy(

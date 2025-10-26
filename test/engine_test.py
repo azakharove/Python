@@ -2,7 +2,7 @@ from datetime import datetime
 
 from trading_lib.engine import ExecutionEngine
 from trading_lib.portfolio import Portfolio
-import Assignment1.strategies as strategies
+import trading_lib.strategies as strategies
 from trading_lib.models import MarketDataPoint
 
 
@@ -56,7 +56,7 @@ def test_moving_avg_crossover_strategy():
     ]
 
     portfolio = Portfolio(holdings={}, cash=10000)
-    engine = ExecutionEngine(strategies=[strategy], portfolio=portfolio)
+    engine = ExecutionEngine(strategy, portfolio=portfolio)
     engine.process_ticks(ticks)
     assert portfolio.cash == 7820
     assert portfolio.get_holding("AAPL") == {"quantity": 20, "avg_price": 109}
@@ -112,7 +112,7 @@ def test_momentum_strategy():
     ]
 
     portfolio = Portfolio(holdings={}, cash=10000)
-    engine = ExecutionEngine(strategies=[strategy], portfolio=portfolio)
+    engine = ExecutionEngine(strategy, portfolio=portfolio)
     engine.process_ticks(ticks)
     assert portfolio.cash == 8940
     assert portfolio.get_holding("AAPL") == {"quantity": 10, "avg_price": 106}

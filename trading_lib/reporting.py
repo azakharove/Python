@@ -38,7 +38,7 @@ def calculate_sharpe_ratio(periodic_returns) -> float:
     return sharpe
 
 
-def report_performance(portfolio: Portfolio, starting_cash: float, ticks: List[MarketDataPoint], current_prices: dict[str, float], periodic_returns) -> Dict:
+def calc_performance_metrics(portfolio: Portfolio, starting_cash: float, ticks: List[MarketDataPoint], current_prices: dict[str, float], periodic_returns) -> Dict:
     """Calculate performance metrics without exposing periodic returns."""
     final_value = portfolio.get_portfolio_value(current_prices)
     

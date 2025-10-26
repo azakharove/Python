@@ -20,12 +20,12 @@ class ExecutionEngine:
 
     def __init__(
         self, 
-        strategies: list[Strategy], 
+        strategy: Strategy, 
         portfolio: Portfolio, 
-        failure_rate: float = 0.05, 
+        failure_rate: float = 0.0, 
         recording_interval: RecordingInterval = RecordingInterval.SECOND
     ):
-        self.strategies = strategies
+        self.strategy = strategy
         self.portfolio = portfolio
         self.failure_rate = failure_rate  # Simulate 5% failure rate by default
         self.recording_interval = recording_interval
@@ -57,21 +57,20 @@ class ExecutionEngine:
                 raise ValueError(f"Unknown recording interval: {self.recording_interval}")
     
     def process_tick(self, tick: MarketDataPoint):
-        for strategy in self.strategies:
-            try:
-                signals = strategy.generate_signals(tick)
-                self.current_prices[tick.symbol] = tick.price
-                for symbol, quantity, price, action in signals:
-                    if action != Action.HOLD:
-                        order = Order(
-                            symbol,
-                            quantity,
-                            price,
-                            status=OrderStatus.PENDING,
-                        )
-                        self.execute_order(order)
-            except Exception as e:
-                print(f"Error processing tick {tick} with strategy {strategy}: {e}")
+        try:
+            signals = self.strategy.generate_signals(tick)
+            self.current_prices[tick.symbol] = tick.price
+            for symbol, quantity, price, action in signals:
+                if action != Action.HOLD:
+                    order = Order(
+                        symbol,
+                        quantity,
+                        price,
+                        status=OrderStatus.PENDING,
+                    )
+                    self.execute_order(order)
+        except Exception as e:
+            print(f"Error processing tick {tick} with strategy {self.strategy}: {e}")
 
     def process_ticks(self, ticks: list[MarketDataPoint]):
         ticks.sort(key=lambda x: x.timestamp)  # Ensure ticks are in timestamp order
@@ -100,7 +99,7 @@ class ExecutionEngine:
                 raise OrderError(order, reason)
 
             # Simulate occasional execution failures 
-            if random.random() < self.failure_rate:
+            if self.failure_rate > 0 and random.random() < self.failure_rate:
                 raise ExecutionError(order, "Simulated execution failure")
 
             # Execute order
