@@ -122,3 +122,8 @@ class ExecutionEngine:
     
     def get_current_prices(self):
         return self.current_prices
+    
+    def record_final_state(self, final_timestamp: datetime):
+        """Record the final portfolio state after all ticks are processed."""
+        holdings_value = self.portfolio.get_holdings_value(self.current_prices)
+        self.record_portfolio_value(final_timestamp, self.portfolio.get_cash(), holdings_value)

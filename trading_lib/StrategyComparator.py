@@ -72,6 +72,9 @@ class StrategyComparator:
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
             engine.process_ticks(ticks)
+            
+            final_timestamp = max(tick.timestamp for tick in ticks)
+            engine.record_final_state(final_timestamp)
 
             current_prices = engine.get_current_prices()
             periodic_returns = engine.get_portfolio_history()
