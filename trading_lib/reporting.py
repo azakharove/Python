@@ -61,8 +61,8 @@ def calc_performance_metrics(portfolio: Portfolio, starting_cash: float, ticks: 
 
 def equity_curve_plot(portfolio_history, file_name = "equity_curve.png"):
     """Generate equity curve plot from portfolio history."""
-
-    dates, values = zip(*portfolio_history)
+    portfolio_history_agg = [(date, cash + holdings) for date, cash, holdings in portfolio_history]
+    dates, values = zip(*portfolio_history_agg)
     plt.figure(figsize=(10, 6))
     plt.plot(dates, values, label='Portfolio Value', color='blue')
     plt.xlabel('Date')

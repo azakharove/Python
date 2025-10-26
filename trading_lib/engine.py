@@ -29,12 +29,12 @@ class ExecutionEngine:
         self.portfolio = portfolio
         self.failure_rate = failure_rate  # Simulate 5% failure rate by default
         self.recording_interval = recording_interval
-        self.portfolio_history: List[Tuple[datetime, float]] = []
+        self.portfolio_history: List[Tuple[datetime, float, float]] = []
         self.last_recorded_period: Optional[tuple] = None
         self.current_prices: dict[str, float] = {}
 
-    def record_portfolio_value(self, timestamp: datetime, value: float):
-        self.portfolio_history.append((timestamp, value))
+    def record_portfolio_value(self, timestamp: datetime, cash: float, holdings: float):
+        self.portfolio_history.append((timestamp, cash, holdings))
     
     def _get_period(self, timestamp: datetime) -> tuple:
         """Extract period identifier from timestamp based on recording_interval."""
@@ -83,8 +83,7 @@ class ExecutionEngine:
             
             # Record portfolio value when period changes
             if self.last_recorded_period is None or current_period != self.last_recorded_period:
-                portfolio_value = self.portfolio.get_portfolio_value(self.current_prices)
-                self.record_portfolio_value(tick.timestamp, portfolio_value)
+                self.record_portfolio_value(tick.timestamp, self.portfolio.get_cash(), self.portfolio.get_holdings_value(self.current_prices))
                 self.last_recorded_period = current_period
 
     def execute_order(self, order: Order):

@@ -19,7 +19,7 @@ def parse_args(args):
     parser.add_argument('-d', "--csv_path", type=Path, default="data/market_data.csv")
     parser.add_argument('-q', "--quantity", type=int, default=10)
     parser.add_argument('-f', "--failure_rate", type=float, default=0.0)
-    parser.add_argument('-c', "--cash", type=float, default=100000)
+    parser.add_argument('-c', "--cash", type=float, default=1000000)
     parser.add_argument('-i', "--interval", type=str, default="1s",
                         choices=[e.value for e in RecordingInterval],
                         help="Portfolio recording interval (tick, 1s, 1m, 1h, 1d, 1mo)")
