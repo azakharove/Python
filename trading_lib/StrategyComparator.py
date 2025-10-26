@@ -6,6 +6,8 @@ from trading_lib.reporting import generate_performance_report, calc_performance_
 from trading_lib.data_loader import load_market_data, load_market_data_yf
 
 import os
+from datetime import datetime
+import csv
 
 class StrategyComparator:
     def __init__(self, output_path: str = ""):
@@ -26,7 +28,7 @@ class StrategyComparator:
     
         print(f"Loaded {len(ticks)} market data points.")
 
-        self.performance_reports_for_strategies(strategies, cash, failure_rate, interval, ticks)     
+        self.performance_reports_for_strategies(strategies, cash, failure_rate, interval, ticks)
 
     def print_portfolio_summary(self, portfolio: Portfolio, metrics: dict, current_prices: dict[str, float]):
         holdings = portfolio.get_all_holdings()
@@ -82,3 +84,15 @@ class StrategyComparator:
                 output_file = self.output_path + "/" + output_file
                 
             generate_performance_report(metrics, periodic_returns, output_file)
+            self.write_portfolio_history(engine.portfolio_history, strategy_name)
+
+    def write_portfolio_history(self, portfolio_history: list[tuple[datetime, float, float]], strategy_name: str):
+        output_file = strategy_name + "_portfolio_history.csv"
+        if self.output_path != "":
+            output_file = self.output_path + "/" + output_file
+        with open(output_file, "w") as csv.csvfile:
+            csv_writer = csv.writer(csv.csvfile)
+            csv_writer.writerow(["Timestamp", "Cash", "Holdings"])
+            csv_writer.writerows(portfolio_history)
+
+                
