@@ -4,8 +4,12 @@ import argparse
 
 from trading_lib.models import RecordingInterval
 from trading_lib.StrategyComparator import StrategyComparator
-from trading_lib.strategies import MovingAverageCrossoverStrategy, MomentumStrategy
 from BenchmarkStrategy import BenchmarkStrategy
+from MACDStrategy import MACDStrategy
+from MovingAverageStrategy import MovingAverageStrategy
+from RSIStrategy import RSIStrategy
+from VolatilityBreakoutStrategy import VolatilityBreakoutStrategy
+
 
 # Local Assignment1 modules
 sys.path.insert(0, str(Path(__file__).parent))
@@ -14,7 +18,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="Trading system")
     parser.add_argument('-d', "--csv_path", type=Path, default="data/market_data.csv")
     parser.add_argument('-q', "--quantity", type=int, default=10)
-    parser.add_argument('-f', "--failure_rate", type=float, default=0.05)
+    parser.add_argument('-f', "--failure_rate", type=float, default=0.0)
     parser.add_argument('-c', "--cash", type=float, default=100000)
     parser.add_argument('-i', "--interval", type=str, default="1s",
                         choices=[e.value for e in RecordingInterval],
@@ -28,9 +32,13 @@ def main(args):
     
     # data_generator.generate_market_csv(csv_path)
 
-    strategies = [MovingAverageCrossoverStrategy(quantity=quantity), BenchmarkStrategy()]
+    strategies = [BenchmarkStrategy(quantity=quantity),
+                  MovingAverageStrategy(quantity=quantity), 
+                  RSIStrategy(quantity=quantity), 
+                  MACDStrategy(quantity=quantity), 
+                  VolatilityBreakoutStrategy(quantity=quantity)]
 
-    StrategyComparator(path = "Assignment_2_Results").compare_strategies(
+    StrategyComparator(output_path = "Assignment_2_Results").compare_strategies(
         strategies, 
         parsed_args.cash, 
         parsed_args.failure_rate, 

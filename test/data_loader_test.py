@@ -4,8 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from trading_lib.data_loader import load_from_reader
-
+from trading_lib.data_loader import load_from_reader, load_from_reader_yf, _parse_date_only
 
 def test_perfect():
     perfect_string = """timestamp,symbol,price
@@ -63,3 +62,42 @@ def test_bad_price():
     reader = csv.DictReader(f)
     with pytest.raises(ValueError):
         load_from_reader(reader)
+
+def test_two_columns():
+    perfect_string =  """Date,Close
+2005-01-03,26.73
+2005-01-04,26.84
+2005-01-05,26.78
+2005-01-06,26.75"""
+    f = io.StringIO(perfect_string)
+    reader = csv.DictReader(f)
+    data = load_from_reader_yf(reader, "AAPL")
+    assert len(data) == 4
+    assert data[0].symbol == "AAPL"
+    assert data[0].price == 26.73
+    assert data[0].timestamp == datetime(
+        year=2005, month=1, day=3
+    )
+
+    assert data[1].symbol == "AAPL"
+    assert data[1].price == 26.84
+    assert data[1].timestamp == datetime(
+        year=2005, month=1, day=4
+    )
+
+    assert data[2].symbol == "AAPL"
+    assert data[2].price == 26.78
+    assert data[2].timestamp == datetime(
+        year=2005, month=1, day=5
+    )
+
+    assert data[3].symbol == "AAPL"
+    assert data[3].price == 26.75
+    assert data[3].timestamp == datetime(
+        year=2005, month=1, day=6
+    )
+
+def test_parse_date_only():
+    ts = "2025-09-21"
+    dt = _parse_date_only(ts)
+    assert dt == datetime(year=2025, month=9, day=21)

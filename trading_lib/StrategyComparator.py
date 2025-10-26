@@ -3,12 +3,30 @@ from trading_lib.models import RecordingInterval, MarketDataPoint
 from trading_lib.engine import ExecutionEngine
 from trading_lib.portfolio import Portfolio
 from trading_lib.reporting import generate_performance_report, calc_performance_metrics
-from trading_lib.data_loader import load_market_data
+from trading_lib.data_loader import load_market_data, load_market_data_yf
+
+import os
 
 class StrategyComparator:
-    def __init__(self, path: str = ""):
-        self.path = path
-        
+    def __init__(self, output_path: str = ""):
+        self.output_path = output_path
+    
+    def compare_strategies(
+        self, 
+        strategies: list[Strategy], 
+        cash: float, 
+        failure_rate: float, 
+        interval: RecordingInterval, 
+        price_path: str
+    ):
+        if os.path.isfile(price_path):
+            ticks = load_market_data(price_path)
+        elif os.path.isdir(price_path):
+            ticks = load_market_data_yf(price_path)
+    
+        print(f"Loaded {len(ticks)} market data points.")
+
+        self.performance_reports_for_strategies(strategies, cash, failure_rate, interval, ticks)     
 
     def print_portfolio_summary(self, portfolio: Portfolio, metrics: dict, current_prices: dict[str, float]):
         holdings = portfolio.get_all_holdings()
@@ -60,20 +78,7 @@ class StrategyComparator:
             self.print_portfolio_summary(portfolio, metrics, current_prices)
             
             output_file = strategy_name + "_performance.md"
-            if self.path != "":
-                output_file = self.path + "/" + output_file
+            if self.output_path != "":
+                output_file = self.output_path + "/" + output_file
                 
             generate_performance_report(metrics, periodic_returns, output_file)
-        
-    def compare_strategies(
-        self, 
-        strategies: list[Strategy], 
-        cash: float, 
-        failure_rate: float, 
-        interval: RecordingInterval, 
-        csv_path: str
-    ):
-        ticks = load_market_data(csv_path)
-        print(f"Loaded {len(ticks)} market data points.")
-
-        self.performance_reports_for_strategies(strategies, cash, failure_rate, interval, ticks) 
