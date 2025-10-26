@@ -1,15 +1,7 @@
 from Assignment2.PriceLoader import PriceLoader
 
-from pathlib import Path
-from typing import List
-
 import pandas as pd
-import requests
 import yfinance as yf
-import csv
-from datetime import datetime
-import time
-import math
 
 def test_fetch_snp500_tickers():
     loader = PriceLoader(start_date="2005-01-01", end_date="2024-12-31")
