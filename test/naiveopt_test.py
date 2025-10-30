@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from trading_lib.models import MarketDataPoint
 
-from strategies import NaiveMovingAverageStrategy, OptimizedMovingAverageStrategy
+from  Assignment3.strategies import NaiveMovingAverageStrategy, OptimizedMovingAverageStrategy
 
 def test_naive_ma():
     # Use smaller windows for testing

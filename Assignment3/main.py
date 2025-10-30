@@ -4,7 +4,7 @@ import argparse
 
 from trading_lib.models import RecordingInterval
 from trading_lib.StrategyComparator import StrategyComparator
-from strategies import NaiveMovingAverageStrategy, OptimizedMovingAverageStrategy
+from Assignment3.strategies import NaiveMovingAverageStrategy, OptimizedMovingAverageStrategy
 
 
 # Local Assignment1 modules
