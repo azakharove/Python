@@ -1,24 +1,3 @@
-# reporting.py
-# -----------------------------------------------------------------------------
-# Assignment 3 – Section 4
-# Markdown + plots from profiler outputs.
-#
-# Inputs:
-#   df: DataFrame with columns:
-#       ['strategy_name', 'dataset_label', 'n_ticks', 'total_time_s', 'peak_mem_mib']
-#   cprofile_map: {(strategy_name, dataset_label, n_ticks) -> str (hotspot text)}
-#   out_root: directory to write PNGs and complexity_report.md
-#
-# Outputs (written into out_root):
-#   - runtime_scaling.png
-#   - memory_scaling.png (skipped if no memory data)
-#   - complexity_report.md
-#
-# Notes:
-#   - Uses matplotlib only (no seaborn).
-#   - Handles missing memory_profiler gracefully (table/plot omitted if NaNs).
-# -----------------------------------------------------------------------------
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,9 +6,6 @@ import math
 
 import pandas as pd
 import matplotlib.pyplot as plt
-
-
-# ------------------------------- helpers -------------------------------------
 
 def _fit_loglog_slope(ns, ys) -> float | None:
     """Return slope b of log(y) ~ a + b log(n), or None if invalid."""
@@ -110,7 +86,6 @@ def _narrative(df: pd.DataFrame, time_cx: dict, mem_cx: dict) -> str:
             mem_note = " Peak memory annotation unavailable."
         lines.append(f"- **{sname}**: runtime grew by ~×{t_ratio:.1f} (annotated {time_cx.get(sname,'n/a')}).{mem_note}")
 
-    # quick head-to-head at largest n (if >=2 strategies)
     if df["strategy_name"].nunique() >= 2 and not df.empty:
         largest_n = df["n_ticks"].max()
         sub = df[df["n_ticks"] == largest_n].sort_values("total_time_s")
@@ -118,9 +93,6 @@ def _narrative(df: pd.DataFrame, time_cx: dict, mem_cx: dict) -> str:
             best = sub.iloc[0]
             lines.append(f"\nAt n={largest_n}, **{best['strategy_name']}** is faster ({best['total_time_s']:.3f}s).")
     return "\n".join(lines)
-
-
-# --------------------------- public entrypoint --------------------------------
 
 def generate_complexity_report(
     df: pd.DataFrame,
@@ -135,9 +107,8 @@ def generate_complexity_report(
     out_root = Path(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    # plots
     runtime_png = _plot_runtime(df, out_root)
-    memory_png = _plot_memory(df, out_root)  # may be None
+    memory_png = _plot_memory(df, out_root) 
 
     # complexity annotations
     time_cx, mem_cx = {}, {}
