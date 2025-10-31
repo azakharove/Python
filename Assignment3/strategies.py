@@ -74,16 +74,15 @@ class OptimizedMovingAverageStrategy(Strategy):
             return []
         
         prices = self._prices[sym]
-        prices.append(price)
 
         # Wait for enough prices to calculate moving averages
         if len(prices) < self.long_window:
-            self._prices[sym].append(price)
+            prices.append(price)
             return []
         
         short_ma = sum(list(prices)[-self.short_window:]) / self.short_window
-        long_ma = sum(prices) / self.long_window
-        
+        long_ma  = sum(list(prices)[-self.long_window:]) / self.long_window
+
         prev_state = self._prev_short_gt_long[sym]
         curr_state = short_ma > long_ma
 
@@ -93,5 +92,6 @@ class OptimizedMovingAverageStrategy(Strategy):
             signals.append((sym, self.quantity, price, Action.BUY))
         
         self._prev_short_gt_long[sym] = curr_state
-        
+        prices.append(price)
+
         return signals
