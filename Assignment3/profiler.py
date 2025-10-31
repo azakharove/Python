@@ -1,10 +1,3 @@
-# profiler.py
-# -----------------------------------------------------------------------------
-# Minimal-impact profiler that REUSES your existing StrategyComparator.
-# Changes to original StrategyComparator: NONE.
-# This subclass only wraps per-strategy execution with timing/profiling.
-# -----------------------------------------------------------------------------
-
 from __future__ import annotations
 
 import io
@@ -18,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pandas as pd
-from timeit import default_timer  # <-- uses timeit module per assignment
+from timeit import default_timer
 
 from trading_lib.strategy import Strategy
 from trading_lib.models import RecordingInterval, MarketDataPoint
@@ -27,15 +20,12 @@ from trading_lib.engine import ExecutionEngine
 from trading_lib.portfolio import Portfolio
 from trading_lib.reporting import generate_performance_report, calc_performance_metrics
 
-# Optional peak memory (graceful if missing)
 try:
     from memory_profiler import memory_usage
     _HAS_MEMPROF = True
 except Exception:
     _HAS_MEMPROF = False
 
-
-# -------------------------- helpers & types ----------------------------------
 
 @dataclass
 class MeasureRow:
@@ -53,9 +43,6 @@ def _cprofile_top_text(pr: cProfile.Profile, sortby: str = "cumtime", lines: int
     pstats.Stats(pr, stream=buf).strip_dirs().sort_stats(sortby).print_stats(lines)
     return buf.getvalue().rstrip()
 
-
-# ----------------------- ProfilerStrategyComparator --------------------------
-
 class ProfilerStrategyComparator:
     """
     A light wrapper that mirrors your StrategyComparator behavior, but measures it.
@@ -69,8 +56,6 @@ class ProfilerStrategyComparator:
         if self.output_path:
             Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
-    # ------------------ identical logic for loading ticks --------------------
-    # (Copied from your compare_strategies to avoid changing original class)
     def _load_ticks(self, price_path: str | Path) -> List[MarketDataPoint]:
         price_path = Path(price_path)
         if price_path.is_file():
@@ -85,8 +70,6 @@ class ProfilerStrategyComparator:
         name = price_path.name
         return name.rsplit(".", 1)[0] if "." in name else name
 
-    # ---------------- core engine run (same as your StrategyComparator) ------
-    # (We keep the same flow to minimize divergence.)
     def _run_engine_once(
         self,
         strategy: Strategy,
@@ -107,7 +90,6 @@ class ProfilerStrategyComparator:
         metrics = calc_performance_metrics(portfolio, cash, ticks, current_prices, periodic_returns)
         return portfolio, metrics, periodic_returns, current_prices
 
-    # ---------------- printing & persisting (same outputs as original) -------
     def _print_portfolio_summary(self, portfolio: Portfolio, metrics: dict, current_prices: dict[str, float]):
         holdings = portfolio.get_all_holdings()
         holdings_value = metrics['final_value'] - portfolio.get_cash()
@@ -145,13 +127,12 @@ class ProfilerStrategyComparator:
         out_file = f"{strategy_name}_portfolio_history.csv"
         if self.output_path:
             out_file = str(Path(self.output_path) / out_file)
-        # IMPORTANT: avoid shadowing csv module (this fixes a bug in the snippet you sent)
-        with open(out_file, "w", newline="") as csvfile:  # <-- changed variable name
+
+        with open(out_file, "w", newline="") as csvfile: 
             writer = csv.writer(csvfile)
             writer.writerow(["Timestamp", "Cash", "Holdings"])
             writer.writerows(portfolio_history)
 
-    # ----------------------- the measuring entrypoint ------------------------
     def compare_and_profile(
         self,
         strategies: list[Strategy],
@@ -182,38 +163,30 @@ class ProfilerStrategyComparator:
         for strategy in strategies:
             strategy_name = strategy.__class__.__name__
 
-            # ---- MEASURING WRAPPER (this is the only "new" logic) ------------
             pr = cProfile.Profile()
 
             def _profiled_run():
-                # One full run, identical outputs as original comparator
                 portfolio, metrics, periodic_returns, current_prices = self._run_engine_once(
                     strategy=strategy, cash=cash, failure_rate=failure_rate, interval=interval, ticks=ticks
                 )
                 self._print_portfolio_summary(portfolio, metrics, current_prices)
                 self._persist_performance(strategy_name, metrics, periodic_returns)
                 self._write_portfolio_history(
-                    portfolio_history=[(ts, cash_val, hold_val) for (ts, cash_val, hold_val) in getattr(portfolio, "history", [])]  # fallback if available
-                    if hasattr(portfolio, "history") else  # safeguard if portfolio_history is not exposed there
-                    [],  # we will rely on report artifacts; or you can wire engine.portfolio_history back if needed
+                    portfolio_history=[(ts, cash_val, hold_val) for (ts, cash_val, hold_val) in getattr(portfolio, "history", [])] 
+                    if hasattr(portfolio, "history") else
+                    [],
                     strategy_name=strategy_name
                 )
 
-            # Time + cProfile + (optional) memory in a single pass:
-            start = default_timer()                       # <-- timeit module
+            start = default_timer()
             if _HAS_MEMPROF:
                 memory_usage((lambda: pr.runcall(_profiled_run),), interval=0.05, include_children=True)
-                peak_mib = max(memory_usage((lambda: None,), max_iterations=1, include_children=True))  # cheap noop to read last sample
-                # NOTE: memory_profiler doesn't expose the last trace directly here; if you prefer exact peak,
-                #       capture the list returned from the first call instead:
-                # mem_trace = memory_usage((lambda: pr.runcall(_profiled_run),), interval=0.05, include_children=True)
-                # peak_mib = max(mem_trace) if mem_trace else None
+                peak_mib = max(memory_usage((lambda: None,), max_iterations=1, include_children=True)) 
             else:
                 pr.runcall(_profiled_run)
                 peak_mib = None
-            total_time_s = default_timer() - start        # <-- timeit module
+            total_time_s = default_timer() - start        
 
-            # Top CPU hotspots
             top = _cprofile_top_text(pr, lines=cprofile_lines)
 
             rows.append(MeasureRow(
@@ -225,7 +198,6 @@ class ProfilerStrategyComparator:
                 cprofile_top=top,
             ))
             cprofile_map[(strategy_name, dataset_label, len(ticks))] = top
-
-        # Build compact table for reporting.py (drop the large cprofile text)
+            
         df = pd.DataFrame([r.__dict__ for r in rows]).drop(columns=["cprofile_top"])
         return df.sort_values(["strategy_name", "n_ticks"]), cprofile_map
