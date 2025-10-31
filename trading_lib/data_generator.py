@@ -4,6 +4,8 @@ import random
 import time
 from dataclasses import dataclass
 
+import os
+
 
 @dataclass(frozen=True)
 class MarketDataPoint:
@@ -73,12 +75,40 @@ def generate_market_csv(
 
 if __name__ == "__main__":
     # Example: generate 500 ticks for AAPL starting at $150.00 into a file
+
+    BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # go up one level
+    DATA_PATH = os.path.join(BASE_DIR, "data", "market_data_1k.csv")
+
     generate_market_csv(
         symbol="AAPL",
         start_price=150.0,
-        filename="data/market_data.csv",
-        num_ticks=500,
+        filename= DATA_PATH,
+        num_ticks=1000,
         volatility=0.02,
         interval=0.01,
     )
-    print("market_data.csv generated with 500 ticks.")
+    print("market_data.csv generated with 1k  ticks.")
+
+    DATA_PATH2 = os.path.join(BASE_DIR, "data", "market_data_10k.csv")
+
+    generate_market_csv(
+        symbol="AAPL",
+        start_price=150.0,
+        filename= DATA_PATH2,
+        num_ticks=10000,
+        volatility=0.02,
+        interval=0.01,
+    )
+    print("market_data.csv generated with 10k ticks.")
+
+    DATA_PATH3 = os.path.join(BASE_DIR, "data", "market_data_100k.csv")
+
+    generate_market_csv(
+        symbol="AAPL",
+        start_price=150.0,
+        filename= DATA_PATH3,
+        num_ticks=100000,
+        volatility=0.02,
+        interval=0.01,
+    )
+    print("market_data.csv generated with 100k ticks.")

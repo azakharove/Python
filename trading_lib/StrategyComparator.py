@@ -25,6 +25,8 @@ class StrategyComparator:
             ticks = load_market_data(price_path)
         elif os.path.isdir(price_path):
             ticks = load_market_data_yf(price_path)
+        else:
+            raise ValueError(f"Invalid price path: {price_path}")
     
         print(f"Loaded {len(ticks)} market data points.")
 
