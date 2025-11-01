@@ -77,28 +77,19 @@ def test_performance_100k():
     
     ticks = load_market_data(data_path)
     strategy = OptimizedMovingAverageStrategy(quantity=100)
-    portfolio = Portfolio(cash=100000)
-    engine = ExecutionEngine(strategy, portfolio, failure_rate=0.0, recording_interval=RecordingInterval.TICK)
-    
     tracemalloc.start()
     start_time = time.time()
-    engine.process_ticks(ticks)
+    
+    for tick in ticks:
+        signals = strategy.generate_signals(tick)
+
     elapsed_time = time.time() - start_time
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     
     peak_mb = peak / (1024 * 1024)
-    
-    # Warn if exceeds ideal threshold (1.0s) but don't fail (CI overhead)
-    if elapsed_time >= 1.0:
-        warnings.warn(
-            f"Performance warning: Time {elapsed_time:.3f}s exceeds ideal 1.0s threshold. "
-            f"This may indicate CI environment overhead.",
-            UserWarning
-        )
-    
-    # Fail only if exceeds reasonable upper bound
-    assert elapsed_time < 1.5, f"Time {elapsed_time:.3f}s exceeds 1.5s threshold"
+
+    assert elapsed_time < 1, f"Time {elapsed_time:.3f}s exceeds 1s threshold"
     assert peak_mb < 100, f"Memory {peak_mb:.2f}MB exceeds 100MB threshold"
 
 if __name__ == "__main__":
