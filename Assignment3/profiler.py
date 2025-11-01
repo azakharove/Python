@@ -9,6 +9,10 @@ import os
 from datetime import datetime
 import csv
 
+import timeit
+import cProfile
+import memory_profiler
+
 class StrategyComparator:
     def __init__(self, output_path: str = ""):
         self.output_path = output_path
@@ -59,6 +63,12 @@ class StrategyComparator:
                 position_value = holding["quantity"] * price
                 print(f"  {symbol}: {holding['quantity']} shares @ ${price:.2f} = ${position_value:,.2f}")
 
+    def output_filename(self, strategy_name: str, suffix: str) -> str:
+        output_file = strategy_name + suffix
+        if self.output_path != "":
+            output_file = self.output_path + "/" + output_file
+        return output_file
+
     def performance_reports_for_strategies(
         self, 
         strategies: list[Strategy], 
@@ -73,7 +83,8 @@ class StrategyComparator:
             strategy_name = strategy.__class__.__name__
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
-            engine.process_ticks(ticks)
+
+            cProfile.run('engine.process_ticks(ticks)', self.output_filename(strategy_name, "_cprofile.prof"))
             
             final_timestamp = max(tick.timestamp for tick in ticks)
             engine.record_final_state(final_timestamp)
@@ -83,12 +94,8 @@ class StrategyComparator:
             metrics = calc_performance_metrics(portfolio, cash, ticks, current_prices, periodic_returns)
 
             self.print_portfolio_summary(portfolio, metrics, current_prices)
-            
-            output_file = strategy_name + "_performance.md"
-            if self.output_path != "":
-                output_file = self.output_path + "/" + output_file
                 
-            generate_performance_report(metrics, periodic_returns, output_file)
+            generate_performance_report(metrics, periodic_returns, self.output_filename(strategy_name,"_performance.md"))
             self.write_portfolio_history(engine.portfolio_history, strategy_name)
 
     def write_portfolio_history(self, portfolio_history: list[tuple[datetime, float, float]], strategy_name: str):
