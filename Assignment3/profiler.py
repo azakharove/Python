@@ -84,12 +84,6 @@ class StrategyProfiler:
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
 
-            # print("--------------- Globals:")
-            # print(globals())
-            # print("--------------- Locals:")
-            # print(locals())
-
-            # cProfile.run('engine.process_ticks(ticks)', self.output_filename(strategy_name, "_cprofile.prof"))
             cProfile.runctx(
                 'engine.process_ticks(ticks)',
                 globals(),
