@@ -13,7 +13,7 @@ import timeit
 import cProfile
 import memory_profiler
 
-class StrategyComparator:
+class StrategyProfiler:
     def __init__(self, output_path: str = ""):
         self.output_path = output_path
     

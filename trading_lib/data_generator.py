@@ -80,12 +80,12 @@ if __name__ == "__main__":
     DATA_PATH = os.path.join(BASE_DIR, "data", "market_data_1k.csv")
 
     generate_market_csv(
-        symbol="AAPL",
-        start_price=150.0,
-        filename= DATA_PATH,
-        num_ticks=1000,
-        volatility=0.02,
-        interval=0.01,
+        symbol = "AAPL",
+        start_price = 150.0,
+        filename = DATA_PATH,
+        num_ticks = 1000,
+        volatility = 0.02,
+        interval = 0.01,
     )
     print("market_data.csv generated with 1k  ticks.")
 
