@@ -69,7 +69,25 @@ def test_opt_ma():
         print(tick, signals)
 
 
-def test_performance_100k():
+def test_time_100k():
+    """Verify optimized strategy meets performance requirements."""
+    data_path = Path("data/market_data_100k.csv")
+    if not data_path.exists():
+        raise ValueError(f"{data_path} not found")
+    
+    ticks = load_market_data(data_path)
+    strategy = OptimizedMovingAverageStrategy(quantity=100)
+    start_time = time.time()
+    
+    for tick in ticks:
+        signals = strategy.generate_signals(tick)
+
+    elapsed_time = time.time() - start_time
+    print("Time: ", elapsed_time)
+
+    assert elapsed_time < 1, f"Time {elapsed_time:.3f}s exceeds 1s threshold"
+
+def test_memory_100k():
     """Verify optimized strategy meets performance requirements."""
     data_path = Path("data/market_data_100k.csv")
     if not data_path.exists():
@@ -78,21 +96,23 @@ def test_performance_100k():
     ticks = load_market_data(data_path)
     strategy = OptimizedMovingAverageStrategy(quantity=100)
     tracemalloc.start()
-    start_time = time.time()
-    
+
     for tick in ticks:
         signals = strategy.generate_signals(tick)
 
-    elapsed_time = time.time() - start_time
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     
     peak_mb = peak / (1024 * 1024)
+    print("Memory: ", peak_mb)
 
-    assert elapsed_time < 1, f"Time {elapsed_time:.3f}s exceeds 1s threshold"
     assert peak_mb < 100, f"Memory {peak_mb:.2f}MB exceeds 100MB threshold"
 
 if __name__ == "__main__":
+    print("\nTesting time on 100k ticks")
+    test_time_100k()
+    print("\nTesting memory on 100k ticks")
+    test_memory_100k()
     print("Testing Naive Moving Average Strategy")
     test_naive_ma()
     print("\nTesting Optimized Moving Average Strategy")
