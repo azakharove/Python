@@ -22,7 +22,6 @@ def prof_to_readable_one(strategy_name: str, data_size: str) -> str:
         ps = pstats.Stats(prof_file, stream=f)
         f.write(f"# Profiling Summary for {strategy_name} with {data_size} ticks\n\n")
         ps.sort_stats('cumulative').print_stats(10)
-        ps.print_stats()
     return strategy_name + data_size + "_prof_summary.md"
 
 if __name__ == "__main__":
