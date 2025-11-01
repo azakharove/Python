@@ -5,6 +5,7 @@ import os
 
 from trading_lib.models import RecordingInterval
 from trading_lib.StrategyComparator import StrategyComparator
+from profiler import StrategyProfiler
 from strategies import  NaiveMovingAverageStrategy, OptimizedMovingAverageStrategy
 from trading_lib.data_generator import generate_market_csv
 import reporting
@@ -47,8 +48,16 @@ def main(args):
             
     strategies = [NaiveMovingAverageStrategy(quantity=quantity), OptimizedMovingAverageStrategy(quantity=quantity)]
 
+    # for data_size in data_sizes:
+    #    StrategyComparator(output_path = "Assignment_3_Results_" + data_size).compare_strategies(
+    #         strategies, 
+    #         parsed_args.cash, 
+    #         parsed_args.failure_rate, 
+    #         RecordingInterval(parsed_args.interval), 
+    #         Path(data_path_for_size(data_size)))  
+
     for data_size in data_sizes:
-       StrategyComparator(output_path = "Assignment_3_Results_" + data_size).compare_strategies(
+       StrategyProfiler(output_path = "Assignment_3_Results_" + data_size).profile_strategies(
             strategies, 
             parsed_args.cash, 
             parsed_args.failure_rate, 

@@ -17,7 +17,7 @@ class StrategyProfiler:
     def __init__(self, output_path: str = ""):
         self.output_path = output_path
     
-    def compare_strategies(
+    def profile_strategies(
         self, 
         strategies: list[Strategy], 
         cash: float, 
@@ -84,7 +84,17 @@ class StrategyProfiler:
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
 
-            cProfile.run('engine.process_ticks(ticks)', self.output_filename(strategy_name, "_cprofile.prof"))
+            # print("--------------- Globals:")
+            # print(globals())
+            # print("--------------- Locals:")
+            # print(locals())
+
+            # cProfile.run('engine.process_ticks(ticks)', self.output_filename(strategy_name, "_cprofile.prof"))
+            cProfile.runctx(
+                'engine.process_ticks(ticks)',
+                globals(),
+                locals(), 
+                filename = self.output_filename(strategy_name, "_cprofile.prof"))
             
             final_timestamp = max(tick.timestamp for tick in ticks)
             engine.record_final_state(final_timestamp)
