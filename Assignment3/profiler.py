@@ -90,7 +90,7 @@ class StrategyProfiler:
                 locals(), 
                 filename = self.output_filename(strategy_name, "_cprofile.prof"))
             
-            final_timestamp = max(tick.timestamp for tick in ticks)
+            final_timestamp = ticks[-1].timestamp
             engine.record_final_state(final_timestamp)
 
             current_prices = engine.get_current_prices()

@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Iterator
 import os
 
 from trading_lib.models import MarketDataPoint
@@ -62,6 +62,9 @@ def load_market_data_yf(directory_path: Path) -> List[MarketDataPoint]:
         print(f"Looking at '{directory_entry}' at '{full_path}'")
         if os.path.isfile(full_path) and directory_entry.endswith(".csv"):
             market_data.extend(read_yf_price_file(full_path))
+    
+    # Sort by timestamp since data comes from multiple files
+    market_data.sort(key=lambda x: x.timestamp)
     return market_data
 
 def read_yf_price_file(full_path: str) -> List[MarketDataPoint]:
@@ -92,6 +95,22 @@ def load_from_reader_yf(reader: csv.DictReader, symbol: str) -> List[MarketDataP
         market_data_list.append(mdp)
     print(f"     Loaded {len(market_data_list)} data points for symbol '{symbol}'")
     return market_data_list
+
+def stream_market_data_csv(path: str) -> Iterator[MarketDataPoint]:
+    with open(path, "r", newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        required_format = {"timestamp", "symbol", "price"}
+        if set(reader.fieldnames) != required_format:
+            raise ValueError(f"CSV must have columns: {required_format}")
+        for row in reader:
+            try:
+                yield MarketDataPoint(
+                    timestamp=_parse_timestamp(row["timestamp"]),
+                    symbol=row["symbol"],
+                    price=float(row["price"]),
+                )
+            except ValueError as e:
+                raise ValueError(f"Error parsing line {reader.line_num}: {e}") from e
 
 if __name__ == "__main__":
     # Example usage

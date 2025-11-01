@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Iterable
 
 from trading_lib.models import Action, MarketDataPoint, Order, OrderStatus, RecordingInterval
 from trading_lib.portfolio import Portfolio
@@ -72,9 +72,9 @@ class ExecutionEngine:
         except Exception as e:
             print(f"Error processing tick {tick} with strategy {self.strategy}: {e}")
 
-    def process_ticks(self, ticks: list[MarketDataPoint]):
-        ticks.sort(key=lambda x: x.timestamp)  # Ensure ticks are in timestamp order
-
+    def process_ticks(self, ticks: Iterable[MarketDataPoint]):
+    
+        # use a generator to process ticks in order
         for tick in ticks:
             self.process_tick(tick)
             
