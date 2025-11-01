@@ -119,7 +119,7 @@ def prof_runtime_summary(
         f.write("# Runtime Profiling Summary\n\n")
         f.write(
             "| Strategy | Data Size | Function Calls | Total Time (s) | Avg Time / Call (ms) |\n"
-            "|:---------|:----------|:--------------:|:--------------:|:--------------------:|\n"
+            "|----------|-----------|----------------|----------------|---------------------|\n"
         )
         for s, d, calls, secs, avg_ms in rows:
             calls_str = f"{calls:,}" if isinstance(calls, int) else ""
