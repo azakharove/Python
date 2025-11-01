@@ -11,7 +11,7 @@ import csv
 
 import timeit
 import cProfile
-import memory_profiler
+import memory_profiler as mp
 
 class StrategyProfiler:
     def __init__(self, output_path: str = ""):
@@ -77,18 +77,13 @@ class StrategyProfiler:
         interval: RecordingInterval, 
         ticks: list[MarketDataPoint]
     ):
-        
         for strategy in strategies:
             portfolio = Portfolio(cash=cash)
             strategy_name = strategy.__class__.__name__
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
 
-            cProfile.runctx(
-                'engine.process_ticks(ticks)',
-                globals(),
-                locals(), 
-                filename = self.output_filename(strategy_name, "_cprofile.prof"))
+            self.time_report_for_strategy(strategy_name, engine, ticks)
             
             final_timestamp = ticks[-1].timestamp
             engine.record_final_state(final_timestamp)
@@ -101,6 +96,27 @@ class StrategyProfiler:
                 
             generate_performance_report(metrics, periodic_returns, self.output_filename(strategy_name,"_performance.md"))
             self.write_portfolio_history(engine.portfolio_history, strategy_name)
+
+    def time_report_for_strategy(
+        self,
+        strategy_name: str,
+        engine: ExecutionEngine,
+        ticks: list[MarketDataPoint]
+    ):
+        profiler = cProfile.Profile()
+        profiler.enable()
+        engine.process_ticks(ticks)
+        profiler.disable()
+        profiler.dump_stats(self.output_filename(strategy_name, "_cprofile.prof"))
+
+    # def memory_report_for_strategy(
+    #     self, 
+    #     strategies: list[Strategy], 
+    #     cash: float, 
+    #     failure_rate: float, 
+    #     interval: RecordingInterval, 
+    #     ticks: list[MarketDataPoint]
+    # ):
 
     def write_portfolio_history(self, portfolio_history: list[tuple[datetime, float, float]], strategy_name: str):
         output_file = strategy_name + "_portfolio_history.csv"
