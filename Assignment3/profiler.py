@@ -38,18 +38,11 @@ class MeasureRow:
 
 
 def _cprofile_top_text(pr: cProfile.Profile, sortby: str = "cumtime", lines: int = 20) -> str:
-    """Format the top lines from cProfile stats."""
     buf = io.StringIO()
     pstats.Stats(pr, stream=buf).strip_dirs().sort_stats(sortby).print_stats(lines)
     return buf.getvalue().rstrip()
 
 class ProfilerStrategyComparator:
-    """
-    A light wrapper that mirrors your StrategyComparator behavior, but measures it.
-    NOTE: We do NOT modify your StrategyComparator; we duplicate the small bits
-    needed to call the exact same engine code and persist the same artifacts.
-    """
-
     def __init__(self, output_path: str | Path = "", dataset_label: str = ""):
         self.output_path = str(output_path) if output_path else ""
         self.dataset_label = dataset_label or ""
