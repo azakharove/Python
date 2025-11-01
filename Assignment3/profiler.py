@@ -11,7 +11,7 @@ import csv
 
 import timeit
 import cProfile
-import memory_profiler as mp
+from memory_profiler import memory_usage
 
 class StrategyProfiler:
     def __init__(self, output_path: str = ""):
@@ -84,6 +84,7 @@ class StrategyProfiler:
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
 
             self.time_report_for_strategy(strategy_name, engine, ticks)
+            self.memory_report_for_strategy(strategy_name, engine, ticks)
             
             final_timestamp = ticks[-1].timestamp
             engine.record_final_state(final_timestamp)
@@ -109,14 +110,18 @@ class StrategyProfiler:
         profiler.disable()
         profiler.dump_stats(self.output_filename(strategy_name, "_cprofile.prof"))
 
-    # def memory_report_for_strategy(
-    #     self, 
-    #     strategies: list[Strategy], 
-    #     cash: float, 
-    #     failure_rate: float, 
-    #     interval: RecordingInterval, 
-    #     ticks: list[MarketDataPoint]
-    # ):
+    def memory_report_for_strategy(
+        self,
+        strategy_name: str,
+        engine: ExecutionEngine,
+        ticks: list[MarketDataPoint]
+    ):
+        mem = memory_usage((engine.process_ticks, (ticks,), {}), max_usage = True)
+        output_file = self.output_filename(strategy_name, "_memory.md")
+
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, "w") as f:
+            f.write(str(mem) + " MiB")
 
     def write_portfolio_history(self, portfolio_history: list[tuple[datetime, float, float]], strategy_name: str):
         output_file = strategy_name + "_portfolio_history.csv"
