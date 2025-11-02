@@ -206,6 +206,7 @@ def prof_memory_summary(
 def generate_plots(
     strategy_names: Iterable[str],
     data_sizes: Iterable[str],
+    out_dir: Optional[str] = None
 ) -> Tuple[str, str]:
     """
     Generate runtime and memory usage plots comparing strategies as base64-encoded images.
@@ -257,11 +258,11 @@ def generate_plots(
     runtime_ax.grid(True, alpha=0.3)
     
     # Convert to base64
-    buf = io.BytesIO()
-    runtime_fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
-    buf.seek(0)
-    runtime_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close(runtime_fig)
+    # buf = io.BytesIO()
+    # runtime_fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    # buf.seek(0)
+    # runtime_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    # plt.close(runtime_fig)
     
     # Memory plot
     memory_fig, memory_ax = plt.subplots(figsize=(10, 6))
@@ -285,14 +286,28 @@ def generate_plots(
     memory_ax.legend()
     memory_ax.grid(True, alpha=0.3)
     
-    # Convert to base64
-    buf = io.BytesIO()
-    memory_fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
-    buf.seek(0)
-    memory_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close(memory_fig)
+    # # Convert to base64
+    # buf = io.BytesIO()
+    # memory_fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    # buf.seek(0)
+    # memory_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    # plt.close(memory_fig)
+
+    if out_dir is None:
+        out_dir = os.path.join(BASE_DIR, "Assignment3", "plots")
+    _ensure_dir(out_dir)
     
-    return runtime_base64, memory_base64
+    runtime_path = os.path.join(out_dir, "runtime_comparison.png")
+    memory_path = os.path.join(out_dir, "memory_comparison.png")
+    runtime_fig.savefig(runtime_path, format='png', dpi=150, bbox_inches='tight')
+    memory_fig.savefig(memory_path, format='png', dpi=150, bbox_inches='tight')
+    plt.close(runtime_fig)
+    plt.close(memory_fig)
+
+    rel_runtime = os.path.join("plots", "runtime_comparison.png")
+    rel_memory = os.path.join("plots", "memory_comparison.png")
+   
+    return rel_runtime, rel_memory
 
 def write_report(
     strategies: list[str],
@@ -323,9 +338,11 @@ def write_report(
     memory_plot_md = ""
     if generate_plots_flag:
         try:
-            runtime_base64, memory_base64 = generate_plots(strategies, data_sizes)
-            runtime_plot_md = f"\n![Runtime Comparison](data:image/png;base64,{runtime_base64})\n"
-            memory_plot_md = f"\n![Memory Comparison](data:image/png;base64,{memory_base64})\n"
+            # pass the Assignment3/plots dir so paths are consistent
+            plots_dir = os.path.join(BASE_DIR, "Assignment3", "plots")
+            runtime_rel, memory_rel = generate_plots(strategies, data_sizes, out_dir=plots_dir)
+            runtime_plot_md = f"\n![Runtime Comparison]({runtime_rel})\n"
+            memory_plot_md = f"\n![Memory Comparison]({memory_rel})\n"
         except Exception as e:
             print(f"Warning: Failed to generate plots: {e}")
 
