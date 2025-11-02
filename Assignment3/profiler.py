@@ -13,6 +13,8 @@ import timeit
 import cProfile
 from memory_profiler import memory_usage
 
+import reporting 
+
 class StrategyProfiler:
     def __init__(self, output_path: str = ""):
         self.output_path = output_path
@@ -77,9 +79,12 @@ class StrategyProfiler:
         interval: RecordingInterval, 
         ticks: list[MarketDataPoint]
     ):
+        
+        strategey_names = []
         for strategy in strategies:
             portfolio = Portfolio(cash=cash)
             strategy_name = strategy.__class__.__name__
+            strategey_names.append(strategy_name)    
 
             engine = ExecutionEngine(strategy, portfolio, failure_rate, recording_interval=interval)
 
@@ -97,6 +102,7 @@ class StrategyProfiler:
                 
             generate_performance_report(metrics, periodic_returns, self.output_filename(strategy_name,"_performance.md"))
             self.write_portfolio_history(engine.portfolio_history, strategy_name)
+        reporting.write_report(strategies = strategey_names)
 
     def time_report_for_strategy(
         self,

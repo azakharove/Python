@@ -296,7 +296,7 @@ def generate_plots(
 
 def write_report(
     strategies: list[str],
-    data_sizes: list[str],
+    data_sizes: list[str] = ["1k", "10k", "100k"],
     report_filename: str = "complexity_report.md",
     regenerate_readables: bool = True,
     generate_plots_flag: bool = True,
