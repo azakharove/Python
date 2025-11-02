@@ -109,7 +109,8 @@ class StrategyProfiler:
         engine.process_ticks(ticks)
         profiler.disable()
         profiler.dump_stats(self.output_filename(strategy_name, "_cprofile.prof"))
-
+        print(f"Time report written to: {self.output_filename(strategy_name, '_cprofile.prof')}")
+    
     def memory_report_for_strategy(
         self,
         strategy_name: str,
@@ -122,6 +123,7 @@ class StrategyProfiler:
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
             f.write(str(mem) + " MiB")
+        print(f"Memory report written to: {output_file}")
 
     def write_portfolio_history(self, portfolio_history: list[tuple[datetime, float, float]], strategy_name: str):
         output_file = strategy_name + "_portfolio_history.csv"
