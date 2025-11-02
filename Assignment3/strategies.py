@@ -82,7 +82,6 @@ class OptimizedMovingAverageStrategy(Strategy):
         self._prices: Dict[str, Deque[float]] = {}
         # track previous MA relationship to catch true crossovers
         self._prev_short_gt_long: Dict[str, bool] = {}
-        self._short_prices: Dict[str, Deque[float]] = {}
         # Per-symbol running sums
         self._short_sum: Dict[str, float] = {}
         self._long_sum: Dict[str, float] = {}
@@ -105,21 +104,17 @@ class OptimizedMovingAverageStrategy(Strategy):
         if sym not in self._prices:  # O(1) dict lookup
             # O(1) - deque initialization
             self._prices[sym] = deque(maxlen = self.long_window)
-            self._short_prices[sym] = deque(maxlen = self.short_window)
             self._prices[sym].append(price)  # O(1)
-            self._short_prices[sym].append(price)
             self._prev_short_gt_long[sym] = False  # O(1)
             self._short_sum[sym] = price  # O(1)
             self._long_sum[sym] = price  # O(1)
             return []
         
         prices = self._prices[sym]
-        shortq = self._short_prices[sym]
         len_prices = len(prices)
 
         if len_prices < self.long_window:  # O(1) len check
-            prices.append(price)  # O(1) - deque append
-            shortq.append(price)
+            prices.append(price)  # O(1) - deque appenD
 
             if len_prices <= self.short_window:  # O(1)
                 self._short_sum[sym] += price  # O(1)

@@ -147,7 +147,6 @@ def prof_runtime_summary(
     _ensure_dir(out_dir)
     out_path = os.path.join(out_dir, summary_filename)
 
-    # Write the table
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("# Runtime Profiling Summary\n\n")
         f.write(
@@ -186,7 +185,6 @@ def prof_memory_summary(
             mem_mib = _parse_memory_md(mem_path)
             rows.append((s, d, mem_mib))
 
-    # Build the table as a string
     lines = []
     lines.append("# Memory Profiling Summary\n\n")
     lines.append(
@@ -309,6 +307,80 @@ def generate_plots(
    
     return rel_runtime, rel_memory
 
+def memory_metrics(strategies: list[str], data_sizes: list[str]) -> str:
+    memory_metrics = []
+    for s in strategies:
+        for d in data_sizes:
+            mem_path = _memory_path(s, d)
+            mem_mib = _parse_memory_md(mem_path)
+            if mem_mib is not None:
+                memory_metrics.append((s, d, mem_mib))
+    return memory_metrics
+
+def time_metrics(strategies: list[str], data_sizes: list[str]) -> str:
+    time_metrics = []
+    for s in strategies:
+        for d in data_sizes:
+            md_path = _readable_prof_path(s, d)
+            metrics = _parse_prof_readable_md(md_path)
+            secs = metrics.get("total_seconds")
+            if secs is not None:
+                time_metrics.append((s, d, secs))
+    return time_metrics
+
+def total_for(strategy: str, metrics: list[tuple[str, str, float]]) -> float:
+    return sum(v for s, _, v in metrics if s.lower() == strategy.lower())
+
+def write_narrative(
+        memory_metrics: list[tuple[str, str, float]],
+        time_metrics: list[tuple[str, str, float]],
+    ) -> str:
+    """
+    Generate a short Markdown narrative comparing optimized vs naive strategies.
+    """
+    if not memory_metrics or not time_metrics:
+        return "## Interpretation\n- No profiling data found."
+
+    opt_name = next((s for s, _, _ in memory_metrics + time_metrics if "opt" in s.lower()), "Optimized")
+    naive_name = next((s for s, _, _ in memory_metrics + time_metrics if "naiv" in s.lower()), "Naive")
+
+    total_time_opt = total_for(opt_name, time_metrics)
+    total_time_naive = total_for(naive_name, time_metrics)
+    total_mem_opt = total_for(opt_name, memory_metrics)
+    total_mem_naive = total_for(naive_name, memory_metrics)
+
+    faster = total_time_opt < total_time_naive
+    lighter = total_mem_opt < total_mem_naive
+
+    narrative = "## Interpretation\n"
+
+    if faster and lighter:
+        narrative += "- **Excellent**: Optimization improved both runtime and memory efficiency.\n"
+    elif faster and not lighter:
+        narrative += "- **Trade-off**: Optimization runs faster but uses more memory.\n"
+    elif not faster and lighter:
+        narrative += "- **Trade-off**: Optimization reduces memory but increases runtime.\n"
+    else:
+        narrative += "- **Neutral**: No significant performance improvement observed.\n"
+
+    # Check scalability (improves more with larger sizes)
+    size_map = {"1k": 1_000, "10k": 10_000, "100k": 100_000, "1m": 1_000_000}
+    time_opt_by_size = sorted(
+        [(size_map.get(d.lower(), 0), v) for s, d, v in time_metrics if s == opt_name]
+    )
+    time_naive_by_size = sorted(
+        [(size_map.get(d.lower(), 0), v) for s, d, v in time_metrics if s == naive_name]
+    )
+    if len(time_opt_by_size) >= 2 and len(time_naive_by_size) >= 2:
+        opt_gain = (time_naive_by_size[-1][1] - time_opt_by_size[-1][1]) - (
+            time_naive_by_size[0][1] - time_opt_by_size[0][1]
+        )
+        if opt_gain > 0:
+            narrative += "- **Scalability**: Optimized performance improves as data size grows.\n"
+
+    return narrative
+
+    
 def write_report(
     strategies: list[str],
     data_sizes: list[str] = ["1k", "10k", "100k"],
@@ -348,6 +420,14 @@ def write_report(
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    memory_stats = memory_metrics(strategies, data_sizes)
+    time_stats = time_metrics(strategies, data_sizes)
+
+    narrative = write_narrative(
+        memory_metrics=memory_stats,
+        time_metrics=time_stats
+    )   
+
     with open(report_path, "w") as f:
         f.write("# Assignment 3 – Profiling Report\n\n")
         f.write(f"_Generated: {timestamp}_\n\n")
@@ -360,6 +440,9 @@ def write_report(
         f.write(memory_table_md)
         if memory_plot_md:
             f.write(memory_plot_md)
+        f.write("\n")
+        f.write("## 3) Performance Interpretation\n\n")
+        f.write(narrative)
         f.write("\n")
 
     return report_path
