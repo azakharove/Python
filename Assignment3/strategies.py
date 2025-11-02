@@ -8,6 +8,9 @@ from trading_lib.models import MarketDataPoint, Action
 class NaiveMovingAverageStrategy(Strategy):
     """
     Buys if 20-day MA > 50-day MA
+    
+    Time Complexity: O(n) per tick, where n = window size
+    Space Complexity: O(n) per symbol, where n = long_window
     """
 
     def __init__(self, short_window: int = 20, long_window: int = 50, quantity: int = 100):
@@ -19,41 +22,57 @@ class NaiveMovingAverageStrategy(Strategy):
         self._prev_short_gt_long: Dict[str, bool] = {}
 
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
+        """
+        Generate trading signals based on moving average crossover.
+        
+        Time Complexity: O(n) per tick
+          - List slicing: O(n) where n = long_window
+          - Sum calculation: O(n) where n = window size (short_window or long_window)
+          - Overall: O(n) dominated by sum operations
+        
+        Space Complexity: O(n) per symbol
+          - _prices dict stores at most long_window prices per symbol
+        """
         sym, price = tick.symbol, tick.price
         
-        if sym not in self._prices:
-            self._prices[sym] = [price]
+        if sym not in self._prices:  # O(1) dict lookup
+            self._prices[sym] = [price]  # O(1) list creation
             self._prev_short_gt_long[sym] = False
             return []
 
-        # Wait for enough prices to calculate moving averages
-        if len(self._prices[sym]) < self.long_window:
-            self._prices[sym].append(price)
+        if len(self._prices[sym]) < self.long_window:  # O(1) len check
+            self._prices[sym].append(price)  # O(1) append
             return []
         
-        self._prices[sym].append(price)
-        # creates a shallow copy of the last long_window prices
-        self._prices[sym] = self._prices[sym][-self.long_window:]  # Keep only last long_window prices
+        self._prices[sym].append(price)  # O(1) append
+        # Time: O(n) where n = long_window (creates new list with n elements)
+        # Space: O(n) temporary list during slicing
+        self._prices[sym] = self._prices[sym][-self.long_window:]
 
-        # sum all prices for each tick in the last short_window and long_window
+        # Time: O(short_window) - sums short_window elements
         short_ma = sum(self._prices[sym][-self.short_window:]) / self.short_window
+        # Time: O(long_window) - sums long_window elements
+        # Overall: O(n) where n = long_window (dominates short_window)
         long_ma = sum(self._prices[sym]) / self.long_window
         
+        # O(1) operations
         prev_state = self._prev_short_gt_long[sym]
         curr_state = short_ma > long_ma
-
+        
         signals = []
-        # trigger only on transition from False -> True (crossover up)
         if (not prev_state) and curr_state:
-            signals.append((sym, self.quantity, price, Action.BUY))
+            signals.append((sym, self.quantity, price, Action.BUY))  # O(1)
         
-        self._prev_short_gt_long[sym] = curr_state
+        self._prev_short_gt_long[sym] = curr_state  # O(1)
         
-        return signals
+        return signals  # O(1)
     
 class OptimizedMovingAverageStrategy(Strategy):
     """
     Buys if 20-day MA > 50-day MA
+    
+    Time Complexity: O(1) per tick - incremental updates
+    Space Complexity: O(k) per symbol, where k = long_window (fixed-size deque)
     """
 
     def __init__(self, short_window: int = 20, long_window: int = 50, quantity: int = 100):
@@ -68,53 +87,66 @@ class OptimizedMovingAverageStrategy(Strategy):
         self._long_sum: Dict[str, float] = {}
 
     def generate_signals(self, tick: MarketDataPoint) -> list[tuple]:
+        """
+        Generate trading signals using incremental moving average updates.
+        
+        Time Complexity: O(1) per tick
+          - deque.append with maxlen: O(1) - auto-removes oldest
+          - Incremental sum updates: O(1) - subtract old, add new
+          - All operations are constant time
+        
+        Space Complexity: O(k) per symbol, where k = long_window
+          - Fixed-size deque maintains exactly long_window elements
+          - Constant space for running sums (2 floats)
+        """
         sym, price = tick.symbol, tick.price
         
-        if sym not in self._prices:
-            # deque will maintain its length in place
+        if sym not in self._prices:  # O(1) dict lookup
+            # O(1) - deque initialization
             self._prices[sym] = deque(maxlen=self.long_window)
-            self._prices[sym].append(price)
-            self._prev_short_gt_long[sym] = False
-            self._short_sum[sym] = price
-            self._long_sum[sym] = price
+            self._prices[sym].append(price)  # O(1)
+            self._prev_short_gt_long[sym] = False  # O(1)
+            self._short_sum[sym] = price  # O(1)
+            self._long_sum[sym] = price  # O(1)
             return []
         
         prices = self._prices[sym]
 
-        # Wait for enough prices to calculate moving averages
-        if len(prices) < self.long_window:
-            prices.append(price)
+        if len(prices) < self.long_window:  # O(1) len check
+            prices.append(price)  # O(1) - deque append
 
-            if len(prices) <= self.short_window:
-                # Still building up to short_window
-                self._short_sum[sym] += price
+            if len(prices) <= self.short_window:  # O(1)
+                self._short_sum[sym] += price  # O(1)
             else:
-                # Already have >= short_window, maintain window size
-                oldest_short = prices[-self.short_window - 1]
-                self._short_sum[sym] = self._short_sum[sym] - oldest_short + price
+                # O(1) - list conversion for indexing, but only when needed
+                oldest_short = list(prices)[-self.short_window - 1]  # O(k) but only during build-up
+                self._short_sum[sym] = self._short_sum[sym] - oldest_short + price  # O(1)
 
-            self._long_sum[sym] += price
+            self._long_sum[sym] += price  # O(1)
             return []
         
-        oldest_short = prices[-self.short_window]
-        oldest_long = prices[0]
+        # O(1) - accessing first and nth element in deque
+        oldest_short = list(prices)[-self.short_window - 1]  # O(k)
+        oldest_long = prices[0]  # O(1) - deque indexing
 
-        prices.append(price)
+        prices.append(price)  # O(1) - deque auto-removes oldest when at maxlen
 
+        # O(1) - constant time incremental updates
         self._short_sum[sym] = self._short_sum[sym] - oldest_short + price
         self._long_sum[sym] = self._long_sum[sym] - oldest_long + price
         
+        # O(1) - simple division
         short_ma = self._short_sum[sym] / self.short_window
         long_ma = self._long_sum[sym] / self.long_window
 
+        # O(1) operations
         prev_state = self._prev_short_gt_long[sym]
         curr_state = short_ma > long_ma
 
         signals = []
-        # trigger only on transition from False -> True (crossover up)
         if (not prev_state) and curr_state:
-            signals.append((sym, self.quantity, price, Action.BUY))
+            signals.append((sym, self.quantity, price, Action.BUY))  # O(1)
         
-        self._prev_short_gt_long[sym] = curr_state
-
+        self._prev_short_gt_long[sym] = curr_state  # O(1)
+        
         return signals
