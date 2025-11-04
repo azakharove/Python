@@ -4,6 +4,7 @@ from trading_lib.engine import ExecutionEngine
 from trading_lib.portfolio import Portfolio
 from trading_lib.reporting import generate_performance_report, calc_performance_metrics
 from trading_lib.data_loader import load_market_data, load_market_data_yf
+from Assignment3.reporting import write_report
 
 import os
 from datetime import datetime
@@ -14,15 +15,6 @@ import cProfile
 from memory_profiler import memory_usage
 import sys
 from pathlib import Path
-
-# BASE_DIR = Path(__file__).resolve().parent
-# ROOT_DIR = BASE_DIR.parent
-# if str(ROOT_DIR) not in sys.path:
-#     sys.path.insert(0, str(ROOT_DIR))
-
-# from . 
-import reporting
-
 
 class StrategyProfiler:
     def __init__(self, output_path: str = ""):
@@ -111,7 +103,7 @@ class StrategyProfiler:
                 
             generate_performance_report(metrics, periodic_returns, self.output_filename(strategy_name,"_performance.md"))
             self.write_portfolio_history(engine.portfolio_history, strategy_name)
-        reporting.write_report(strategies = strategey_names)
+        write_report(strategies = strategey_names)
 
     def time_report_for_strategy(
         self,
