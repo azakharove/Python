@@ -15,12 +15,13 @@ from memory_profiler import memory_usage
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-ROOT_DIR = BASE_DIR.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+# BASE_DIR = Path(__file__).resolve().parent
+# ROOT_DIR = BASE_DIR.parent
+# if str(ROOT_DIR) not in sys.path:
+#     sys.path.insert(0, str(ROOT_DIR))
 
-from . import reporting
+# from . 
+import reporting
 
 
 class StrategyProfiler:
