@@ -31,6 +31,8 @@ jobs:
         python -m pip install --upgrade pip requests
         python -m pip install --upgrade pip yfinance
         python -m pip install --upgrade pip lxml
+        python -m pip install --upgrade matplotlib
+        python -m pip install --upgrade memory_profiler
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
